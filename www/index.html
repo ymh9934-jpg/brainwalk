@@ -190,6 +190,17 @@ input.codein{font:inherit;font-size:1.6em;font-weight:900;letter-spacing:.12em;t
   .choice .em{font-size:2.1em}
   .card{padding:12px 14px;margin:8px 0}
 }
+.mic{display:flex;align-items:center;justify-content:center;gap:10px;margin:14px auto 6px;font-weight:900;color:var(--green)}
+.mic .dotm{width:22px;height:22px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 0 rgba(200,85,47,.5);animation:pulse 1.2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 14px rgba(200,85,47,0)}100%{box-shadow:0 0 0 0 rgba(200,85,47,0)}}
+.mic.off .dotm{background:#C9B49A;animation:none}
+.heard{text-align:center;font-size:.85em;color:var(--soft);font-weight:700;min-height:1.4em}
+.bigpic{font-size:6em;text-align:center;line-height:1.2;margin:6px 0}
+.readtxt{font-size:1.45em;font-weight:900;line-height:1.6;text-align:center;word-break:keep-all}
+.timebar{height:12px;border-radius:999px;background:#EFE3D3;overflow:hidden;margin:6px 0 10px}
+.timebar i{display:block;height:100%;width:100%;background:var(--green2);transform-origin:left;animation:shrink var(--t) linear forwards}
+@keyframes shrink{to{transform:scaleX(0)}}
+.chips.big .chip{font-size:1em;background:var(--mint)}
 .steps{margin:.3em 0 0;padding-left:1.2em;font-weight:700;line-height:1.7}
 </style>
 </head>
@@ -253,6 +264,13 @@ const WORDSETS=[
   [{e:'🚂',n:'기차'},{e:'🌻',n:'해바라기'},{e:'🧦',n:'양말'}]
 ];
 const WORD_FOILS=[{e:'🏀',n:'공'},{e:'🍙',n:'주먹밥'},{e:'🐢',n:'거북이'},{e:'✈️',n:'비행기'},{e:'🎹',n:'피아노'},{e:'🍓',n:'딸기'},{e:'⌚',n:'시계'},{e:'🦋',n:'나비'},{e:'🚌',n:'버스'}];
+const SAY_NAMES={'🍎':['사과'],'🍌':['바나나'],'🐶':['강아지','개','멍멍이','바둑이'],'🐱':['고양이','야옹이','나비'],'🌸':['꽃','벚꽃','꽃잎'],'🏠':['집','주택'],'☀️':['해','태양','햇님','해님'],'🐟':['물고기','생선','고기'],'🍉':['수박'],'🐔':['닭','수탉','암탉','꼬꼬'],'☂️':['우산','양산'],'🥕':['당근'],'🍇':['포도'],'🌙':['달','초승달','반달'],'🐻':['곰','곰돌이'],'🔔':['종','방울']};
+const READS=['가는 말이 고와야 오는 말이 곱다','티끌 모아 태산','세 살 버릇 여든까지 간다','천 리 길도 한 걸음부터','백지장도 맞들면 낫다','낮말은 새가 듣고 밤말은 쥐가 듣는다','콩 심은 데 콩 나고 팥 심은 데 팥 난다','말 한마디로 천 냥 빚을 갚는다','오늘 아침에 따뜻한 차를 마셨어요','손주가 주말에 놀러 온대요','시장에서 싱싱한 사과를 샀어요','저녁에는 동네를 한 바퀴 걸어요'];
+const FLUENCY={
+  '동물':'개 강아지 고양이 소 송아지 말 망아지 돼지 닭 병아리 오리 거위 양 염소 토끼 호랑이 범 사자 코끼리 기린 원숭이 곰 여우 늑대 사슴 노루 다람쥐 쥐 생쥐 하마 코뿔소 얼룩말 낙타 캥거루 판다 펭귄 독수리 매 참새 까치 까마귀 비둘기 제비 부엉이 올빼미 앵무새 거북이 거북 뱀 개구리 두꺼비 악어 고래 상어 돌고래 물개 문어 오징어 낙지 게 꽃게 새우 나비 벌 꿀벌 개미 잠자리 메뚜기 모기 파리 너구리 두더지 고슴도치 수달 표범 치타 공룡 학 두루미 백조 칠면조 공작 붕어 잉어 고등어 꿩 황소 젖소 멧돼지 사마귀 지렁이 달팽이 미꾸라지 갈매기 기러기 청둥오리 카멜레온 고릴라 침팬지'.split(' '),
+  '과일':'사과 배 감 귤 밀감 오렌지 바나나 포도 딸기 수박 참외 복숭아 복숭 자두 살구 체리 앵두 키위 망고 파인애플 레몬 자몽 석류 무화과 대추 밤 블루베리 멜론 홍시 곶감 유자 매실 모과 리치 용과 샤인머스캣 머루 다래 한라봉 천혜향 단감 금귤 오디 산딸기 아보카도 코코넛'.split(' '),
+  '채소':'배추 무 당근 감자 고구마 양파 대파 파 쪽파 마늘 생강 오이 호박 애호박 단호박 가지 고추 풋고추 피망 파프리카 토마토 상추 깻잎 시금치 콩나물 숙주 브로콜리 양배추 버섯 표고버섯 느타리 팽이버섯 연근 우엉 도라지 더덕 부추 미나리 쑥갓 냉이 달래 쑥 옥수수 콩 완두콩 고사리 아욱 열무 셀러리 아스파라거스 비트 청경채 근대 비름 취나물 고들빼기 토란 마 알타리'.split(' ')
+};
 const THINGS=[{k:'wallet',e:'👛',n:'지갑'},{k:'key',e:'🔑',n:'열쇠'},{k:'glasses',e:'👓',n:'안경'},{k:'med',e:'💊',n:'약'},{k:'remote',e:'📺',n:'리모컨'},{k:'bankbook',e:'📕',n:'통장'}];
 const HOME_PLACES=['안방 서랍','안방 침대 옆','거실 소파','거실 TV 옆','부엌 식탁','현관 신발장','가방 안','외투 주머니'];
 
@@ -264,9 +282,9 @@ const DOMAINS={
   speed:{n:'눈의 빠르기',ic:'⚡',type:'번개 눈형',say:'눈이 빠르고 반응이 날쌘 분이에요.'},
   calc:{n:'계산력',ic:'🧮',type:'알뜰 계산왕형',say:'돈 계산이 정확하신 분이에요.'}
 };
-const DOMAIN_GAMES={orient:['today'],memory:['story','shop'],space:['place','cards'],attention:['order'],speed:['speed'],calc:['money']};
+const DOMAIN_GAMES={orient:['today'],memory:['story','shop','speak'],space:['place','cards'],attention:['order'],speed:['speed'],calc:['money']};
 /* 요일별 편성: [요일 놀이, 둘째 놀이]  (0=일요일) */
-const WEEK={0:['today','money'],1:['place','cards'],2:['story','order'],3:['shop','today'],4:['place','money'],5:['story','cards'],6:['shop','order']};
+const WEEK={0:['today','money'],1:['place','speak'],2:['story','cards'],3:['shop','today'],4:['place','speak'],5:['story','money'],6:['shop','order']};
 const CHECK_EVERY=28;
 
 const KEY='brainwalk-v1';
@@ -340,7 +358,58 @@ function speak(t){
   if(!('speechSynthesis' in window))return;
   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(strip(t));u.lang='ko-KR';if(koVoice)u.voice=koVoice;u.rate=.88;speechSynthesis.speak(u)}catch(e){}
 }
-function hush(){if(NATIVE&&PL.TextToSpeech){try{PL.TextToSpeech.stop().catch(()=>{})}catch(e){}return}try{speechSynthesis.cancel()}catch(e){}}
+function speakAsync(t){
+  return new Promise(res=>{
+    let ok=false;const done=()=>{if(!ok){ok=true;res()}};
+    const txt=strip(t);setTimeout(done,txt.length*260+3000);
+    if(!S.voice)return done();
+    if(NATIVE&&PL.TextToSpeech){try{PL.TextToSpeech.speak({text:txt,lang:'ko-KR',rate:.9}).then(done,done)}catch(e){done()}return}
+    if('speechSynthesis' in window){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(txt);u.lang='ko-KR';if(koVoice)u.voice=koVoice;u.rate=.88;u.onend=done;u.onerror=done;speechSynthesis.speak(u)}catch(e){done()}return}
+    done();
+  });
+}
+/* 음성인식 (앱에서만) */
+const SR=()=>NATIVE?(PL.SpeechRecognition||null):null;
+const canSpeakGame=()=>!!SR();
+let srOK=null;
+async function srReady(){
+  const sr=SR();if(!sr)return false;
+  if(srOK===true)return true;
+  try{
+    const a=await sr.available();if(!a||!a.available){srOK=false;return false}
+    let p=await sr.checkPermissions();
+    if(p.speechRecognition!=='granted')p=await sr.requestPermissions();
+    srOK=p.speechRecognition==='granted';
+  }catch(e){srOK=false}
+  return srOK;
+}
+function listen(ms){
+  const sr=SR();if(!sr)return Promise.resolve([]);
+  return new Promise(res=>{
+    let fin=false;const end=v=>{if(fin)return;fin=true;res(v||[])};
+    const to=setTimeout(()=>{try{sr.stop()}catch(e){}end([])},ms);
+    try{sr.start({language:'ko-KR',maxResults:5,popup:false,partialResults:false}).then(r=>{clearTimeout(to);end((r&&r.matches)||[])},()=>{clearTimeout(to);end([])})}
+    catch(e){clearTimeout(to);end([])}
+  });
+}
+function stopListen(){const sr=SR();if(sr){try{sr.stop()}catch(e){}}}
+const cleanK=s=>String(s).replace(/[^가-힣a-zA-Z0-9]/g,'');
+function heardAny(matches,answers){const ms=matches.map(cleanK);return answers.some(a=>ms.some(m=>m.includes(cleanK(a))))}
+function lcsRatio(a,b){
+  a=cleanK(a);b=cleanK(b);if(!a.length)return 0;
+  const dp=Array(b.length+1).fill(0);
+  for(let i=1;i<=a.length;i++){let prev=0;for(let j=1;j<=b.length;j++){const t=dp[j];dp[j]=a[i-1]===b[j-1]?prev+1:Math.max(dp[j],dp[j-1]);prev=t}}
+  return dp[b.length]/a.length;
+}
+const JOSA=['','이','가','도','랑','이랑','하고','요','은','는','을','를','이요','이고','고'];
+function fluencyHits(text,lex){
+  const out=new Set();
+  String(text).split(/[\s,.!?]+/).map(cleanK).filter(Boolean).forEach(tok=>{
+    for(const w of lex){if(JOSA.some(j=>tok===w+j)){out.add(w);break}}
+  });
+  return out;
+}
+function hush(){stopListen();if(NATIVE&&PL.TextToSpeech){try{PL.TextToSpeech.stop().catch(()=>{})}catch(e){}return}try{speechSynthesis.cancel()}catch(e){}}
 
 /* 효과음 */
 let AC=null;
@@ -481,10 +550,11 @@ function daysUntilCheck(){
 }
 function weakDomains(c){return Object.keys(DOMAINS).filter(x=>x!=='speed').sort((a,z)=>c.scores[a]-c.scores[z]).slice(0,2)}
 function lineup(d){
-  const [b,c]=WEEK[d.getDay()];
+  let [b,c]=WEEK[d.getDay()];
+  if(!canSpeakGame()){if(b==='speak')b='cards';if(c==='speak')c='cards'}
   const l=lastCheck();
   if(!l)return [{k:'speed'},{k:b},{k:c}];
-  const recs=[...new Set(weakDomains(l).flatMap(w=>DOMAIN_GAMES[w]))].filter(x=>x!==b&&x!=='speed');
+  const recs=[...new Set(weakDomains(l).flatMap(w=>DOMAIN_GAMES[w]))].filter(x=>x!==b&&x!=='speed'&&(x!=='speak'||canSpeakGame()));
   const di=Math.floor((d.getTime()-d.getTimezoneOffset()*60000)/86400000);
   return [{k:'speed'},{k:b},recs.length?{k:recs[di%recs.length],rec:true}:{k:c}];
 }
@@ -921,6 +991,96 @@ function todayGame(done){
   next();
 }
 
+
+/* 9. 말하기 (이름 말하기 · 소리 내어 읽기 · 생각나는 대로 말하기) */
+function speakGame(done){
+  const my=RUN;
+  const alive=()=>my===RUN;
+  let step=0;const STEPS=7;
+  const head=()=>top('말하기',step+' / '+STEPS);
+  const scores={name:[],read:[],flu:null};
+  const micHTML=(on,txt)=>`<div class="mic${on?'':' off'}" id="mic"><span class="dotm"></span><span>${txt}</span></div><div class="heard" id="hd"></div>`;
+  const setMic=(on,txt)=>{const m=$('#mic');if(m){m.className='mic'+(on?'':' off');m.lastElementChild.textContent=txt}};
+  const setHeard=t=>{const h=$('#hd');if(h)h.textContent=t};
+  (async()=>{
+    const ok=await srReady();if(!alive())return;
+    /* 1) 그림 이름 말하기 */
+    const pics=shuffle(ITEMS.slice()).slice(0,4);
+    for(const it of pics){
+      step++;if(!alive())return;
+      const names=SAY_NAMES[it.e]||[it.n];
+      if(!ok){ // 음성인식이 안 되면 눌러서 대답
+        const opts=shuffle([it,...shuffle(ITEMS.filter(x=>x!==it)).slice(0,2)]).map(x=>({t:x.n,x}));
+        const r=await new Promise(res=>choose(head(),'이건 무엇일까요?',`<div class="bigpic">${it.e}</div>`,opts,(o,b)=>{const c=o.x===it;b.classList.add(c?'right':'wrong');c?good():soft();later(()=>res(c),1000)},3));
+        scores.name.push(r?100:0);continue;
+      }
+      let got=false;
+      for(let tryN=0;tryN<2&&!got;tryN++){
+        const q=tryN===0?'이건 무엇일까요? 말해 주세요':`힌트! 첫 글자는 '${it.n[0]}'예요`;
+        view(`${head()}<div class="prompt">${q}</div><div class="bigpic">${it.e}</div>${micHTML(false,'잠깐만요…')}`);
+        await speakAsync(tryN===0?'이건 무엇일까요?':`힌트! 첫 글자는 ${it.n[0]}예요`);if(!alive())return;
+        setMic(true,'듣고 있어요. 말씀해 주세요');
+        const m=await listen(7000);if(!alive())return;
+        setHeard(m[0]?`"${m[0]}"`:'');
+        got=heardAny(m,names);
+      }
+      scores.name.push(got?100:0);
+      if(got){good();setMic(false,'맞아요! 👏');await speakAsync(`맞아요, ${it.n}!`)}
+      else{soft();setMic(false,`${ieyo(it.n)}`);await speakAsync(`${ieyo(it.n)}. 괜찮아요.`)}
+      if(!alive())return;
+    }
+    /* 2) 소리 내어 읽기 */
+    const reads=shuffle(READS.slice()).slice(0,2);
+    for(const s of reads){
+      step++;if(!alive())return;
+      view(`${head()}<div class="prompt">소리 내어 읽어 주세요</div><div class="card readtxt">${s}</div>${ok?micHTML(false,'잠깐만요…'):'<button class="big-btn" id="rd">다 읽었어요</button>'+autoHint()}`);
+      await speakAsync('소리 내어 읽어 주세요');if(!alive())return;
+      if(!ok){await new Promise(res=>autoGo($('#rd'),9000,res));continue}
+      let best=0;
+      for(let tryN=0;tryN<2&&best<.75;tryN++){
+        if(tryN===1){setMic(false,'한 번 더 읽어 볼까요?');await speakAsync('좋아요! 한 번 더 읽어 볼까요?');if(!alive())return}
+        setMic(true,'듣고 있어요. 읽어 주세요');
+        const m=await listen(12000);if(!alive())return;
+        const r=Math.max(0,...m.map(x=>lcsRatio(s,x)));
+        if(r>best)best=r;
+        setHeard(m[0]?`"${m[0]}"`:'');
+      }
+      scores.read.push(Math.round(best*100));
+      if(best>=.75){good();setMic(false,'또박또박 잘 읽으셨어요 👏');await speakAsync('또박또박 잘 읽으셨어요')}
+      else{setMic(false,'잘하셨어요!');await speakAsync('잘하셨어요!')}
+      if(!alive())return;
+    }
+    /* 3) 생각나는 대로 말하기 (30초) */
+    step++;
+    let cat=null,found=new Set();
+    if(ok){
+      const cats=Object.keys(FLUENCY);cat=cats[Math.floor(Date.now()/86400000)%cats.length];
+      const lex=FLUENCY[cat];
+      view(`${head()}<div class="prompt">${cat} 이름을 생각나는 대로 많이 말해 주세요</div>
+        <div class="timebar"><i id="tbar" style="--t:30000ms;animation-play-state:paused"></i></div>
+        ${micHTML(false,'잠깐만요…')}<div class="chips big" id="fw" style="justify-content:center"></div>`);
+      await speakAsync(`30초 동안 ${cat} 이름을 생각나는 대로 많이 말해 주세요. 시작!`);if(!alive())return;
+      $('#tbar').style.animationPlayState='running';
+      setMic(true,'듣고 있어요');
+      const end=Date.now()+30000;
+      while(Date.now()<end-800&&alive()){
+        const m=await listen(Math.min(9000,end-Date.now()));if(!alive())return;
+        m.forEach(t=>fluencyHits(t,lex).forEach(w=>{if(!found.has(w)){found.add(w);tick();const fw=$('#fw');if(fw)fw.insertAdjacentHTML('beforeend',`<span class="chip">${w}</span>`)}}));
+      }
+      stopListen();
+      scores.flu=Math.min(100,Math.round(found.size/12*100));
+      setMic(false,`${cat} ${found.size}개를 말씀하셨어요!`);good();
+      await speakAsync(`${cat} 이름을 ${found.size}개 말씀하셨어요!`);if(!alive())return;
+    }
+    const parts=[];
+    if(scores.name.length)parts.push(scores.name.reduce((a,b)=>a+b,0)/scores.name.length);
+    if(scores.read.length)parts.push(scores.read.reduce((a,b)=>a+b,0)/scores.read.length);
+    if(scores.flu!=null)parts.push(scores.flu);
+    const nameOk=scores.name.filter(x=>x===100).length;
+    const line=`그림 ${pics.length}개 중 <b>${nameOk}개</b> 이름을 맞히셨어요`+(cat?`<br>${cat} 이름 <b>${found.size}개</b>를 말씀하셨어요`:'');
+    done({k:'speak',line,up:false,score:parts.length?Math.round(parts.reduce((a,b)=>a+b,0)/parts.length):null,lvl:cat?`${cat} ${found.size}개`:'눌러서 대답'});
+  })();
+}
 const GAMES={
   speed:{why:'미국 ACTIVE 연구에서 65세 이상 2,800여 명을 20년 동안 살펴봤더니, 이런 “빨리 보기” 훈련을 받고 1~3년 뒤 보충 훈련까지 한 분들은 치매 진단이 25% 적었어요.',icon:'👀',title:'빨리 보기',run:speedGame,
     say:()=>S.lv.speed.periph?'가운데 그림과 함께, 바깥 어딘가에 자동차가 잠깐 나와요. 가운데 그림과 자동차 자리를 둘 다 맞혀 주세요.':'가운데에 그림이 잠깐 나왔다가 사라져요. 무슨 그림이었는지 맞혀 주세요.'},
@@ -930,6 +1090,7 @@ const GAMES={
   story:{why:'치매 재활에서 쓰는 “간격 두고 다시 떠올리기(spaced retrieval)” 방식을 넣었어요. 들은 내용을 시간을 두고 다시 떠올리는 연습으로, 같은 질문을 반복하는 문제를 줄이는 데 쓰여 온 방법이에요. 그래서 마지막에 첫 이야기를 한 번 더 여쭤봐요.',icon:'📞',title:'이야기 기억',run:storyGame,say:()=>'가족이나 이웃이 전해 준 이야기를 들려 드려요. 잘 듣고, 누가 언제 무엇을 했는지 기억해 주세요.'},
   shop:{why:'단어 목록을 듣고 나중에 떠올리는 연습이에요. 코크란 리뷰에서 이런 기억 훈련을 하면 바로 떠올리기와 조금 뒤에 떠올리기 모두 좋아졌어요.',icon:'🛒',title:'장보기 기억',run:shopGame,say:()=>'오늘 시장에서 살 것을 보여 드려요. 잘 기억했다가 가게에서 빠짐없이 골라 주세요.'},
   money:{why:'일본 가와시마 교수팀의 “학습요법”은 간단한 계산과 소리 내어 읽기를 하루 15~20분 하는 프로그램이에요. 무작위 대조시험에서 치매가 있는 분과 건강한 노인 모두 인지 기능이 유지되거나 좋아졌어요.',icon:'🧮',title:'장보기 계산',run:moneyGame,say:()=>'물건값을 보고 모두 얼마인지, 거스름돈이 얼마인지 계산해 주세요.'},
+  speak:{why:'소리 내어 읽기는 가와시마 학습요법의 핵심 활동이고, 그림 이름 말하기와 “생각나는 대로 말하기”는 인지 선별검사에서 언어 능력을 볼 때 흔히 쓰는 과제예요. 보고, 떠올리고, 소리 내어 말하는 과정에서 여러 두뇌 영역을 함께 써요.',icon:'🎤',title:'말하기',run:speakGame,say:()=>'그림을 보고 이름을 말하고, 글을 소리 내어 읽고, 생각나는 대로 말해 보는 놀이예요. 휴대폰에 대고 편하게 말씀해 주세요.'},
   today:{why:'오늘 날짜·요일·계절을 짚어 보는 “현실 인식 훈련”이에요. 연구를 모은 분석에서 꾸준히 했을 때(총 600분 이상) 인지 기능이 좋아졌어요.',icon:'📅',title:'오늘 알기',run:todayGame,say:()=>'오늘이 무슨 요일인지, 지금 시계가 몇 시인지 맞혀 보는 놀이예요.'}
 };
 
@@ -1458,6 +1619,8 @@ const REFS=[
   r:'A literature review of spaced-retrieval interventions in dementia. International Psychogeriatrics, 2013',u:'https://doi.org/10.1017/S1041610213001233'},
  {h:'🛒 장보기 기억',t:'건강한 노인과 경도인지장애가 있는 분의 기억 훈련 연구를 모은 코크란 리뷰예요. 바로 떠올리기와 조금 뒤에 떠올리기 모두 좋아졌어요. 다만 다른 활동을 한 비교군보다 확실히 낫지는 않았어요.',
   r:'Martin M, Clare L 외. Cognition-based interventions for healthy older people and people with MCI. Cochrane Database Syst Rev, 2011',u:'https://doi.org/10.1002/14651858.CD006220.pub2'},
+ {h:'🎤 말하기',t:'소리 내어 읽기는 일본 학습요법(계산 + 소리 내어 읽기)의 한 축이에요. 그림 이름 말하기와 정해진 시간 동안 같은 종류의 낱말을 말하는 과제(언어 유창성)는 여러 인지 선별검사에서 쓰는 언어 과제예요. 이 앱의 말하기 놀이는 그 형식을 본뜬 연습이고, 검사는 아니에요.',
+  r:'Kawashima R. Mental exercises for cognitive function: clinical evidence. J Prev Med Public Health, 2013',u:'https://pmc.ncbi.nlm.nih.gov/articles/PMC3567314'},
  {h:'🧮 장보기 계산',t:'간단한 계산과 소리 내어 읽기를 매일 15~20분 하는 일본의 학습요법이에요. 무작위 대조시험에서 치매가 있는 분과 지역사회 노인 모두 인지 기능이 좋아졌어요.',
   r:'Kawashima R. Mental exercises for cognitive function: clinical evidence. J Prev Med Public Health, 2013',u:'https://pmc.ncbi.nlm.nih.gov/articles/PMC3567314'},
  {h:'📅 오늘 알기',t:'무작위 대조시험 11편을 모은 분석이에요. 현실 인식 훈련을 600분 넘게 했을 때 치매가 있는 분의 인지 기능이 중간 정도로 좋아졌어요. 다만 이것만으로는 효과가 약하다는 리뷰도 있어서, 다른 놀이와 함께 하도록 넣었어요.',
@@ -1569,7 +1732,7 @@ function famHome(){
   // 놀이별 기록
   const hist=d.hist||[];
   const byK={};hist.forEach(x=>{(byK[x.k]=byK[x.k]||[]).push(x)});
-  const order=['speed','place','story','shop','cards','order','money','today'].filter(k=>byK[k]);
+  const order=['speed','place','story','shop','speak','cards','order','money','today'].filter(k=>byK[k]);
   const games=order.map(k=>{
     const a=byK[k].slice(-12),g=GAMES[k],last=a[a.length-1];
     let trend='';
