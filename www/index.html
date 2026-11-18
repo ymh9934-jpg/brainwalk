@@ -1194,7 +1194,10 @@ function thingDetail(k){
       ${r.photo?`<img class="photo" src="${r.photo}" alt="둔 곳 사진">`:''}
       <button class="big-btn" id="ch">다른 곳에 뒀어요</button>
       <button class="sub-btn" id="bk">목록으로</button>
+      <button class="linkbtn" id="del" style="color:var(--coral)">이 기록 지우기</button>
     </div>`);
+  let da=false;const del=$('#del');
+  del.onclick=()=>{if(!da){da=true;del.textContent='정말 지울까요? 한 번 더 누르세요';return}delete S.things[k];save();queueSync();tick();things()};
   speak(`${eun(t.n)} ${r.place}에 있어요`);
   $('#ch').onclick=()=>{tick();thingPick(k)};
   $('#bk').onclick=()=>{tick();things()};
@@ -1389,8 +1392,9 @@ function settings(){
   const rs=$('#rs');
   rs.onclick=()=>{
     if(!armed){armed=true;rs.textContent='정말 지울까요? 한 번 더 누르세요';return}
-    const keep={name:S.name,fs:S.fs,voice:S.voice,sound:S.sound,things:S.things,alarm:S.alarm,role:S.role,link:S.link};
-    S=Object.assign(clone(DEF),keep);save();rs.textContent='기록을 지웠어요';
+    const keep={name:S.name,fs:S.fs,voice:S.voice,sound:S.sound,alarm:S.alarm,role:S.role,link:S.link};
+    S=Object.assign(clone(DEF),keep);save();setupAlarms(false);queueSync();
+    rs.textContent='기록을 모두 지웠어요 (놀이·두뇌 체크·물건 자리)';rs.disabled=true;
   };
 }
 
