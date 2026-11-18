@@ -173,6 +173,23 @@ input.codein{font:inherit;font-size:1.6em;font-weight:900;letter-spacing:.12em;t
 .tbl{width:100%;border-collapse:collapse;font-size:.75em;margin-top:6px}
 .tbl td{padding:3px 4px;border-bottom:1px solid var(--line);color:var(--ink)}
 .tbl td:last-child{color:var(--soft)}
+.big-btn.auto{position:relative;overflow:hidden}
+.big-btn.auto::after{content:'';position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(255,255,255,.28);animation:fillbar var(--t) linear forwards}
+@keyframes fillbar{to{width:100%}}
+.autohint{text-align:center;color:var(--soft);font-weight:700;font-size:.78em;margin:-4px 0 0}
+.choice,.tile,.role,.tool-btn,.thing{overflow-wrap:anywhere;min-width:0}
+.arena,.room{max-width:min(420px,54vh)}
+.cards,.ngrid{max-width:min(440px,56vh)}
+@media (max-height:760px){
+  body{font-size:calc(19px * var(--fs))}
+  #app{padding-top:12px}
+  .icon-big{font-size:3.2em;margin:8px 0 0}
+  .prompt{min-height:2.3em;margin:4px 0 8px}
+  .big-btn{padding:.7em .6em;margin:10px 0 8px}
+  .choice{padding:10px 6px 8px}
+  .choice .em{font-size:2.1em}
+  .card{padding:12px 14px;margin:8px 0}
+}
 .steps{margin:.3em 0 0;padding-left:1.2em;font-weight:700;line-height:1.7}
 </style>
 </head>
@@ -259,7 +276,7 @@ function syncUrl(){try{return localStorage.getItem('bw-sync-url')||SYNC_URL_BUIL
 const DEF={name:'할머니',fs:1,voice:true,sound:true,
   lv:{speed:{dur:1600,periph:false},cards:{pairs:3},order:{n:5},place:{k:2},story:{q:2},shop:{k:3},money:{lv:1},today:{clk:1}},
   first:null,days:{},checks:[],things:{},alarm:{on:true,am:10,pm:19,asked:false},
-  role:null,hist:[],lastOpen:0,
+  role:null,hist:[],lastOpen:0,auto:{on:true,slow:false},
   link:{on:false,code:null,token:null,lastSync:0,pending:false},
   fam:{code:null,data:null,fetched:0,remind:true,hour:20,asked:false}};
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -270,7 +287,7 @@ function load(){
       const o=JSON.parse(raw),d=clone(DEF),lv={};
       for(const k in d.lv)lv[k]=Object.assign(d.lv[k],(o.lv||{})[k]||{});
       const r=Object.assign(d,o,{lv,days:o.days||{},checks:o.checks||[],things:o.things||{},alarm:Object.assign(d.alarm,o.alarm||{}),
-        hist:o.hist||[],link:Object.assign(d.link,o.link||{}),fam:Object.assign(d.fam,o.fam||{})});
+        hist:o.hist||[],auto:Object.assign(d.auto,o.auto||{}),link:Object.assign(d.link,o.link||{}),fam:Object.assign(d.fam,o.fam||{})});
       if(!r.role&&(Object.keys(r.days).length||r.checks.length))r.role='grandma';
       return r;
     }
@@ -347,6 +364,17 @@ const tick=()=>tone([784],.07,'sine',.12);
 function top(title,step,back){
   return `<div class="topbar"><button class="stop" data-a="home">${back?'← 처음으로':'✕ 그만하기'}</button><span class="step">${title}${step?' · '+step:''}</span></div>`;
 }
+/* 자동으로 넘어가기: 버튼이 서서히 채워지다가 다 차면 저절로 눌려요 */
+function autoGo(btn,ms,fn){
+  if(!btn)return;
+  let fired=false;const go=()=>{if(fired)return;fired=true;fn()};
+  btn.onclick=()=>{tick();go()};
+  if(!S.auto.on)return;
+  const t=Math.round(ms*(S.auto.slow?1.6:1));
+  btn.classList.remove('auto');void btn.offsetWidth;btn.style.setProperty('--t',t+'ms');btn.classList.add('auto');
+  later(go,t);
+}
+const autoHint=()=>S.auto.on?'<p class="autohint">가만히 계시면 저절로 넘어가요</p>':'';
 /* 객관식 화면 */
 function choose(head,prompt,body,opts,cb,cols){
   const c=cols||(opts.length===4?2:opts.length);
@@ -729,10 +757,12 @@ function storyGame(done){
     view(`${head()}<div class="prompt">잘 듣고 기억해 주세요</div>
       <div class="card story">${st.t}</div>
       <button class="listen" id="ag">🔊 다시 듣기</button>
-      <button class="big-btn" id="ok">다 들었어요 ▶</button>`);
+      <button class="big-btn" id="ok">다 들었어요 ▶</button>${autoHint()}`);
     speak(st.t);
-    $('#ag').onclick=()=>speak(st.t);
-    $('#ok').onclick=()=>{hush();tick();countBreak(head(),()=>ask(st,0))};
+    const go=()=>{hush();countBreak(head(),()=>ask(st,0))};
+    const arm=()=>autoGo($('#ok'),Math.max(9000,st.t.length*200+3500),go);
+    $('#ag').onclick=()=>{RUN++;speak(st.t);arm()};
+    arm();
   }
   function ask(st,j){
     const qs=st.q.slice(0,qn);
@@ -774,13 +804,16 @@ function shopGame(done){
         <div class="choices" style="--c:${size===12?4:3}">${board.map((g,i)=>`<button class="choice" data-i="${i}"><span class="em">${g.e}</span>${g.n}</button>`).join('')}</div>
         <button class="big-btn" id="fin" disabled>다 골랐어요</button>`);
       speak('살 것을 모두 골라 주세요');
-      const fin=$('#fin');
+      const fin=$('#fin');let finished=false,pickTok=0;
       $$('.choice').forEach(b=>b.onclick=()=>{
+        if(finished)return;
         const i=+b.dataset.i;
         if(sel.has(i))sel.delete(i);else sel.add(i);
         b.classList.toggle('sel');tick();fin.disabled=sel.size===0;
+        const tk=++pickTok;if(S.auto.on&&sel.size>=k)later(()=>{if(!finished&&tk===pickTok&&sel.size>=k)fin.onclick()},1500);
       });
       fin.onclick=()=>{
+        if(finished)return;finished=true;
         let hits=0,fa=0;
         $$('.choice').forEach(b=>{
           const i=+b.dataset.i,inList=list.includes(board[i]);
@@ -796,7 +829,7 @@ function shopGame(done){
         if(hits===k)good();else soft();
         const p=$('.prompt');p.className='prompt '+(hits===k?'ok':'no');
         p.innerHTML=hits===k?'다 맞히셨어요! 👏':`${k}개 중 ${hits}개 맞히셨어요. 점선이 빠진 물건이에요`;
-        fin.textContent='다음 ▶';fin.onclick=()=>{tick();startRound()};
+        fin.textContent='다음 ▶';autoGo(fin,3800,startRound);
       };
     }
   }
@@ -871,9 +904,9 @@ function todayGame(done){
       let up=false;if(clkOk===2&&L.clk<2){L.clk=2;up=true}
       save();
       const s=`오늘은 ${d.getFullYear()}년 ${md(d)} ${WD[d.getDay()]}요일, ${ieyo(season(d.getMonth()+1))}`;
-      view(`${head()}<div class="center-col"><div class="icon-big">📅</div><div class="card desc" style="text-align:center">${s}</div><button class="big-btn" id="nx">다음 ▶</button></div>`);
+      view(`${head()}<div class="center-col"><div class="icon-big">📅</div><div class="card desc" style="text-align:center">${s}</div><button class="big-btn" id="nx2">다음 ▶</button>${autoHint()}</div>`);
       speak(s);
-      $('#nx').onclick=()=>done({k:'today',line:`${N}문제 중 <b>${cor}문제</b> 맞히셨어요`,up,score:Math.round(cor/N*100),lvl:`시계 ${L.clk}단계`});
+      autoGo($('#nx2'),5000,()=>done({k:'today',line:`${N}문제 중 <b>${cor}문제</b> 맞히셨어요`,up,score:Math.round(cor/N*100),lvl:`시계 ${L.clk}단계`}));
       return;
     }
     const q=qs[t]();t++;
@@ -915,11 +948,13 @@ function intro(){
       <div class="card desc">${text}</div>
       <button class="listen" id="again">🔊 설명 다시 듣기</button>
       <details class="why"><summary>📖 왜 이 놀이를 하나요?</summary><p>${g.why}</p></details>
-      <button class="big-btn" id="go">시작하기</button>
+      <button class="big-btn" id="go">시작하기</button>${autoHint()}
     </div>`);
   speak(text);
-  $('#again').onclick=()=>speak(text);
-  $('#go').onclick=()=>{hush();tick();g.run(r=>result(r))};
+  const start=()=>{hush();g.run(r=>result(r))};
+  const arm=()=>autoGo($('#go'),Math.max(6500,text.length*160+2500),start);
+  $('#again').onclick=()=>{RUN++;speak(text);arm()};
+  arm();
 }
 function result(r){
   if(typeof r.score==='number'){
@@ -934,10 +969,10 @@ function result(r){
       <h1 style="text-align:center">${praise}</h1>
       <div class="card desc" style="text-align:center">${r.line}</div>
       ${r.up?'<p class="hint">솜씨가 늘어서 다음엔 한 단계 올라가요 ⬆️</p>':''}
-      <button class="big-btn" id="nx">${last?'산책 마치기 ▶':'다음 놀이 ▶'}</button>
+      <button class="big-btn" id="nx">${last?'산책 마치기 ▶':'다음 놀이 ▶'}</button>${autoHint()}
     </div>`);
   speak(praise+' '+r.line);
-  $('#nx').onclick=()=>{tick();if(last)finishSession();else{SES.i++;intro()}};
+  autoGo($('#nx'),5000,()=>{if(last)finishSession();else{SES.i++;intro()}});
 }
 function finishSession(){
   const k=keyOf(new Date()),prev=S.days[k]||{};
@@ -970,10 +1005,10 @@ function startCheck(){
       <h1 style="text-align:center">두뇌 체크</h1>
       <div class="card desc" style="text-align:left">날짜 감각, 기억력, 집중력, 눈의 빠르기, 계산력, 물건 자리 기억을 하나씩 살펴봐요.<br><br>10분쯤 걸려요. 틀려도 괜찮으니 편하게 해 주세요.</div>
       <p class="hint">결과에 맞춰 앞으로 할 놀이를 골라 드려요.<br>4주마다 다시 하면 변화를 볼 수 있어요.</p>
-      <button class="big-btn" id="go">시작하기</button>
+      <button class="big-btn" id="go">시작하기</button>${autoHint()}
     </div>`);
   speak('두뇌 체크를 시작해요. 틀려도 괜찮으니 편하게 해 주세요.');
-  $('#go').onclick=()=>{tick();ckRegister()};
+  autoGo($('#go'),8000,ckRegister);
 }
 /* 1. 단어 세 개 외우기 */
 function ckRegister(){
@@ -982,10 +1017,11 @@ function ckRegister(){
     <div class="card"><div class="shoplist">${w.map(x=>`<div><span>${x.e}</span>${x.n}</div>`).join('')}</div></div>
     <p class="hint">조금 있다가 다시 여쭤볼게요</p>
     <button class="listen" id="ag">🔊 다시 듣기</button>
-    <button class="big-btn" id="ok">기억했어요 ▶</button>`);
+    <button class="big-btn" id="ok">기억했어요 ▶</button>${autoHint()}`);
   const say='기억해 주세요. '+w.map(x=>x.n).join(', ');
-  speak(say);$('#ag').onclick=()=>speak(say);
-  $('#ok').onclick=()=>{hush();tick();ckOrient()};
+  speak(say);
+  const arm=()=>autoGo($('#ok'),9000,()=>{hush();ckOrient()});
+  $('#ag').onclick=()=>{RUN++;speak(say);arm()};arm();
 }
 /* 2. 날짜 감각 */
 function ckOrient(){
@@ -1005,9 +1041,9 @@ function ckOrient(){
 /* 3. 눈의 빠르기: 같은 그림 빨리 찾기 */
 function ckSpeed(){
   const N=6;let j=0,okN=0,rts=[];
-  view(`${ckHead(3)}<div class="center-col"><div class="icon-big">⚡</div><div class="card desc">위에 나온 그림과 <b>같은 그림</b>을<br>아래에서 빨리 찾아 눌러 주세요.</div><button class="big-btn" id="go">시작하기</button></div>`);
+  view(`${ckHead(3)}<div class="center-col"><div class="icon-big">⚡</div><div class="card desc">위에 나온 그림과 <b>같은 그림</b>을<br>아래에서 빨리 찾아 눌러 주세요.</div><button class="big-btn" id="go">시작하기</button>${autoHint()}</div>`);
   speak('위에 나온 그림과 같은 그림을 아래에서 빨리 찾아 눌러 주세요.');
-  $('#go').onclick=()=>{hush();trial()};
+  autoGo($('#go'),7000,()=>{hush();trial()});
   function trial(){
     if(j>=N){
       const avg=rts.length?rts.reduce((a,b)=>a+b,0)/rts.length:5;
@@ -1030,9 +1066,9 @@ function ckSpeed(){
 /* 4. 집중력: 숫자 따라 누르기 */
 function ckAttention(){
   let len=3,tries=0,best=0;
-  view(`${ckHead(4)}<div class="center-col"><div class="icon-big">🎯</div><div class="card desc">숫자가 하나씩 나와요.<br>다 나오면 <b>나온 순서대로</b> 눌러 주세요.</div><button class="big-btn" id="go">시작하기</button></div>`);
+  view(`${ckHead(4)}<div class="center-col"><div class="icon-big">🎯</div><div class="card desc">숫자가 하나씩 나와요.<br>다 나오면 <b>나온 순서대로</b> 눌러 주세요.</div><button class="big-btn" id="go">시작하기</button>${autoHint()}</div>`);
   speak('숫자가 하나씩 나와요. 다 나오면 나온 순서대로 눌러 주세요.');
-  $('#go').onclick=()=>{hush();round()};
+  autoGo($('#go'),7000,()=>{hush();round()});
   function finish(){CK.scores.attention={0:15,3:40,4:60,5:80,6:100}[best];ckCalc()}
   function round(){
     const seq=[];while(seq.length<len){const v=1+rand(9);if(v!==seq[seq.length-1])seq.push(v)}
@@ -1106,14 +1142,17 @@ function ckRecall(){
     <button class="big-btn" id="fin" disabled>다 골랐어요</button>
     <button class="listen" id="dk">잘 생각이 안 나요</button>`);
   speak('처음에 기억한 세 가지를 골라 주세요');
-  const fin=$('#fin');
+  const fin=$('#fin');let ended=false;
   $$('.choice').forEach(b=>b.onclick=()=>{
+    if(ended)return;
     const i=+b.dataset.i;
     if(sel.has(i)){sel.delete(i);b.classList.remove('sel')}
     else{if(sel.size>=3)return;sel.add(i);b.classList.add('sel')}
     tick();fin.disabled=sel.size===0;
+    if(S.auto.on&&sel.size===3)later(()=>{if(sel.size===3)end()},1200);
   });
   const end=()=>{
+    if(ended)return;ended=true;
     let hits=0;sel.forEach(i=>{if(w.includes(board[i]))hits++});
     CK.scores.memory=Math.round(hits/3*100);ckFinish();
   };
@@ -1335,6 +1374,12 @@ function settings(){
       <div class="seg" id="fs"><button data-v="1">보통</button><button data-v="1.15">크게</button><button data-v="1.3">아주 크게</button></div>
     </div>
     <div class="card">
+      <label class="lbl">다음으로 저절로 넘어가기</label>
+      <div class="seg" id="au"><button data-v="1">켜기</button><button data-v="0">끄기</button></div>
+      <label class="lbl" style="margin-top:14px">넘어가는 빠르기</label>
+      <div class="seg" id="as"><button data-v="0">보통</button><button data-v="1">천천히</button></div>
+    </div>
+    <div class="card">
       <label class="lbl">목소리 안내</label>
       <div class="seg" id="vo"><button data-v="1">켜기</button><button data-v="0">끄기</button></div>
       <label class="lbl" style="margin-top:14px">효과음</label>
@@ -1380,6 +1425,8 @@ function settings(){
   seg('#fs',()=>S.fs,v=>{S.fs=+v;applyFont()});
   seg('#vo',()=>S.voice?1:0,v=>{S.voice=v==='1';if(S.voice)speak('목소리 안내를 켰어요')});
   seg('#so',()=>S.sound?1:0,v=>{S.sound=v==='1'});
+  seg('#au',()=>S.auto.on?1:0,v=>{S.auto.on=v==='1'});
+  seg('#as',()=>S.auto.slow?1:0,v=>{S.auto.slow=v==='1'});
   if(NATIVE){
     const re=async()=>{const ok=await setupAlarms(true);S.alarm.asked=true;save();const m=$('#almsg');if(m)m.textContent=ok?(S.alarm.on?`매일 오전 ${S.alarm.am}시, 저녁 ${S.alarm.pm-12}시에 알려 드려요.`:'알림을 껐어요.'):'알림 권한이 꺼져 있어요. 휴대폰 설정에서 알림을 허용해 주세요.'};
     seg('#al',()=>S.alarm.on?1:0,v=>{S.alarm.on=v==='1';re()});
@@ -1392,7 +1439,7 @@ function settings(){
   const rs=$('#rs');
   rs.onclick=()=>{
     if(!armed){armed=true;rs.textContent='정말 지울까요? 한 번 더 누르세요';return}
-    const keep={name:S.name,fs:S.fs,voice:S.voice,sound:S.sound,alarm:S.alarm,role:S.role,link:S.link};
+    const keep={name:S.name,fs:S.fs,voice:S.voice,sound:S.sound,alarm:S.alarm,role:S.role,link:S.link,auto:S.auto};
     S=Object.assign(clone(DEF),keep);save();setupAlarms(false);queueSync();
     rs.textContent='기록을 모두 지웠어요 (놀이·두뇌 체크·물건 자리)';rs.disabled=true;
   };
