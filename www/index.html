@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>매일 두뇌 산책</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF7EC; --ink:#2A211A; --soft:#6B5A4C; --line:#EADBC8;
+  --green:#2F6E50; --green-d:#1F4D37; --green2:#3F8A66; --coral:#C8552F; --cream:#FBF4EA;
+  --gold:#E3A92B; --gold-l:#FFE9B8; --mint:#E6F2EA;
+  --fs:1;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',system-ui,-apple-system,sans-serif;touch-action:manipulation}
+body{font-size:calc(21px * var(--fs));line-height:1.5}
+button{font-family:inherit;cursor:pointer;-webkit-user-select:none;user-select:none;color:var(--ink)}
+#app{max-width:560px;margin:0 auto;padding:20px 16px 36px;min-height:100vh;display:flex;flex-direction:column}
+
+.date{font-size:1em;color:var(--soft);font-weight:700}
+h1{font-size:1.5em;line-height:1.3;margin:.15em 0 .3em;font-weight:900;letter-spacing:-.02em}
+h2{font-size:1.1em;margin:0 0 .4em;font-weight:900}
+.card{background:#fff;border:2px solid var(--line);border-radius:22px;padding:16px 18px;margin:10px 0;box-shadow:0 8px 24px rgba(90,60,30,.06)}
+.card.gold{background:#FFF6DF;border-color:#F0D58E}
+.card.mint{background:#F1F8F3;border-color:#C5E0D0}
+.big-btn{display:block;width:100%;border:none;border-radius:22px;padding:.85em .6em;font-size:1.22em;font-weight:900;color:#fff;background:var(--green);box-shadow:0 6px 0 var(--green-d);margin:14px 0 10px}
+.big-btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--green-d)}
+.big-btn:disabled{background:#B8C9BF;box-shadow:0 6px 0 #9DB0A5}
+.big-btn.gold{background:#D9962A;box-shadow:0 6px 0 #A86E12}
+.row{display:flex;gap:12px;margin-top:6px}
+.sub-btn{flex:1;border:3px solid var(--line);background:#fff;border-radius:18px;padding:.65em .4em;font-size:1em;font-weight:800;box-shadow:0 4px 0 var(--line);width:100%}
+.sub-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.hint{text-align:center;color:var(--soft);font-weight:700;font-size:.88em;margin:0}
+.note{font-size:.68em;color:var(--soft);margin-top:auto;padding-top:22px;text-align:center}
+.small{font-size:.85em;color:var(--soft);font-weight:700;margin:.3em 0 0}
+
+.today-line{display:flex;align-items:center;justify-content:space-between;font-weight:800}
+.pips{display:flex;gap:8px}
+.pip{width:26px;height:26px;border-radius:50%;background:#EFE3D3;display:flex;align-items:center;justify-content:center;font-size:.8em}
+.pip.on{background:var(--green);color:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{background:var(--cream);border-radius:999px;padding:.2em .75em;font-size:.8em;font-weight:800}
+.chip.rec{background:var(--gold-l)}
+.week{display:flex;gap:6px;margin-top:6px}
+.day{flex:1;text-align:center;font-weight:700;color:var(--soft);font-size:.78em}
+.day .dot{display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:1;border-radius:50%;background:#F3E8DA;font-size:1.35em;margin-bottom:3px}
+.day.today .dot{box-shadow:0 0 0 3px var(--green) inset}
+.tool-btn{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:#fff;border:3px solid var(--line);border-radius:20px;padding:14px 16px;box-shadow:0 4px 0 var(--line);margin:10px 0;font-size:1em}
+.tool-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.tool-btn .ti{font-size:2em;line-height:1}
+.tool-btn b{display:block;font-size:1.05em}
+.tool-btn span.s{display:block;font-size:.8em;color:var(--soft);font-weight:700}
+
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
+.stop{border:none;background:#EFE3D3;font-size:.82em;font-weight:800;padding:.45em .85em;border-radius:14px;white-space:nowrap}
+.step{font-weight:800;color:var(--soft);font-size:.85em;text-align:right}
+.prompt{font-size:1.12em;font-weight:900;text-align:center;margin:8px 0 12px;min-height:2.7em;display:flex;align-items:center;justify-content:center;line-height:1.35}
+.prompt.ok{color:var(--green)} .prompt.no{color:var(--coral)}
+
+.arena{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:8px;background:#fff;border:3px solid var(--line);border-radius:24px;padding:10px;aspect-ratio:1;width:100%;max-width:400px;margin:0 auto}
+.cell{min-width:0;min-height:0;overflow:hidden;border-radius:16px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:2.3em;border:none;padding:0;line-height:1}
+.cell.center{background:#fff;border:3px dashed #D8C6AF;font-size:3em}
+.cell.mask{background:repeating-linear-gradient(45deg,#8a7a6a 0 7px,#cbbba8 7px 14px);border:none}
+.cell.hl{background:var(--gold-l);box-shadow:0 0 0 4px var(--gold) inset}
+.cell.pbtn{background:#EAF3EE;box-shadow:0 4px 0 #BFD9CB}
+.cell.pbtn:active{transform:translateY(3px);box-shadow:none}
+.plus{color:#B9A58C;font-weight:900}
+.qm{color:#B9A58C;font-weight:900;font-size:.8em}
+
+.choices{display:grid;grid-template-columns:repeat(var(--c),1fr);gap:12px;margin:6px auto 0;max-width:440px;width:100%}
+.choice{background:#fff;border:3px solid var(--line);border-radius:20px;padding:14px 6px 10px;font-size:1em;font-weight:800;box-shadow:0 5px 0 var(--line)}
+.choice:active{transform:translateY(4px);box-shadow:0 1px 0 var(--line)}
+.choice .em{display:block;font-size:2.4em;line-height:1.15;margin-bottom:4px}
+.choice.txt{font-size:1.12em;padding:16px 8px}
+.choice.sel{border-color:var(--green);background:var(--mint);box-shadow:0 5px 0 #9ACBB0}
+.choice.right{border-color:var(--green);background:var(--mint)}
+.choice.wrong{border-color:#E9B3A0;background:#FBE9E2}
+.choice.miss{border-style:dashed;border-color:var(--green)}
+
+.cards{display:grid;gap:10px;grid-template-columns:repeat(var(--c),1fr);max-width:440px;width:100%;margin:0 auto}
+.mcard{aspect-ratio:3/4;border-radius:18px;border:3px solid var(--green2);font-size:2.3em;background:var(--green2);color:#fff;box-shadow:0 5px 0 #23573F;padding:0;line-height:1}
+.mcard .q{font-size:.6em;font-weight:900;opacity:.75;color:#fff}
+.mcard.up{background:#fff;border-color:var(--line);box-shadow:0 5px 0 var(--line)}
+.mcard.done{background:var(--mint);border-color:#9ACBB0;box-shadow:none}
+
+.ngrid{display:grid;gap:10px;grid-template-columns:repeat(var(--c),1fr);max-width:420px;width:100%;margin:0 auto}
+.num{aspect-ratio:1;border-radius:18px;border:3px solid var(--line);background:#fff;font-size:1.65em;font-weight:900;box-shadow:0 5px 0 var(--line);padding:0}
+.num.empty{visibility:hidden}
+.num.got{background:var(--green);color:#fff;border-color:var(--green);box-shadow:none;transform:translateY(4px)}
+.nx{display:inline-block;min-width:1.6em;padding:0 .3em;margin-left:.3em;background:var(--green);color:#fff;border-radius:12px}
+.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+
+.room{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:420px;width:100%;margin:0 auto}
+.tile{position:relative;aspect-ratio:1;border-radius:18px;background:var(--cream);border:3px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.72em;font-weight:800;padding:4px;text-align:center;line-height:1.2}
+.tile .pe{font-size:2.3em;line-height:1.15;margin-bottom:2px}
+.tile .obj{position:absolute;top:-6px;right:-6px;font-size:2.2em;background:#fff;border-radius:50%;width:1.45em;height:1.45em;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,.18)}
+button.tile{box-shadow:0 4px 0 var(--line)}
+button.tile:active{transform:translateY(3px);box-shadow:none}
+.tile.hl{border-color:var(--gold);background:var(--gold-l)}
+.tile.ok{border-color:var(--green);background:var(--mint)}
+.tile.bad{border-color:#E9B3A0;background:#FBE9E2}
+
+.apples{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;font-size:2.4em;margin:6px 0 14px}
+.story{font-size:1.15em;font-weight:700;line-height:1.8}
+.listen{border:none;background:none;color:var(--green);font-weight:800;font-size:.9em;padding:.4em;margin:0 auto;display:block}
+.shoplist{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.shoplist div{background:var(--cream);border-radius:16px;padding:8px 12px;font-weight:900;text-align:center;min-width:5.2em}
+.shoplist div span{display:block;font-size:2em;line-height:1.2}
+.money{font-size:1.1em;font-weight:800;line-height:1.7;text-align:center}
+.clock{width:62%;max-width:240px;display:block;margin:0 auto 10px}
+.digit{font-size:4.2em;font-weight:900;text-align:center;height:1.5em;line-height:1.5em;color:var(--green)}
+.entered{font-size:1.8em;font-weight:900;text-align:center;letter-spacing:.25em;min-height:1.5em;color:var(--ink)}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:360px;margin:6px auto 0;width:100%}
+.key{aspect-ratio:1.4;border-radius:16px;border:3px solid var(--line);background:#fff;font-size:1.6em;font-weight:900;box-shadow:0 4px 0 var(--line)}
+.key:active{transform:translateY(3px);box-shadow:none}
+
+.center-col{text-align:center;display:flex;flex-direction:column;align-items:stretch}
+.icon-big{font-size:4em;line-height:1.1;margin:16px 0 4px;text-align:center}
+.desc{font-size:1.05em;font-weight:700;line-height:1.6}
+.badge{display:inline-block;background:var(--gold-l);border-radius:999px;padding:.15em .8em;font-size:.8em;font-weight:900;margin:0 auto}
+.stat{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:2px dashed var(--line);font-weight:700}
+.stat:last-child{border-bottom:none}
+.stat b{font-size:1em;text-align:right}
+.stars{color:var(--gold);letter-spacing:1px;white-space:nowrap}
+.copybox{white-space:pre-wrap;background:var(--cream);border-radius:14px;padding:12px 14px;font-size:.78em;-webkit-user-select:text;user-select:text;margin-top:10px}
+label.lbl{display:block;font-weight:800;margin:4px 0 8px}
+input.name{font:inherit;font-size:1.05em;padding:.4em .6em;border:3px solid var(--line);border-radius:14px;width:100%;background:#fff;color:var(--ink)}
+.seg{display:flex;gap:8px}
+.seg button{flex:1;border:3px solid var(--line);background:#fff;border-radius:14px;padding:.5em .2em;font-weight:800;font-size:.9em}
+.seg button.on{background:var(--green);color:#fff;border-color:var(--green)}
+.danger{border:3px solid #E9C3B3;background:#fff;color:var(--coral);border-radius:14px;padding:.55em;width:100%;font-weight:800;font-size:.9em}
+.thing{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:#fff;border:3px solid var(--line);border-radius:20px;padding:12px 14px;box-shadow:0 4px 0 var(--line);margin:10px 0;font-size:1em}
+.thing:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.thing .te{font-size:2.3em;line-height:1}
+.thing .tx{flex:1}
+.thing .tx b{display:block;font-size:1.05em}
+.thing .tx span{display:block;font-size:.85em;font-weight:700;color:var(--green)}
+.thing .tx span.none{color:var(--soft)}
+.thing img{width:58px;height:58px;object-fit:cover;border-radius:12px}
+.photo{width:100%;border-radius:18px;margin-top:10px;display:block}
+.placegrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.placegrid button{border:3px solid var(--line);background:#fff;border-radius:16px;padding:.7em .3em;font-weight:800;font-size:.95em;box-shadow:0 4px 0 var(--line)}
+.filebtn{display:block;text-align:center;border:3px dashed #C9B49A;border-radius:16px;padding:.7em;font-weight:800;color:var(--soft);cursor:pointer}
+.filebtn input{display:none}
+.why{background:#fff;border:2px solid var(--line);border-radius:16px;padding:10px 14px;text-align:left;font-size:.85em;font-weight:700;margin:6px 0}
+.why summary{cursor:pointer;color:var(--green);font-weight:900}
+.why p{margin:.5em 0 0;line-height:1.6;color:var(--soft)}
+.ref{font-size:.72em;color:var(--soft);font-weight:700;margin:.5em 0 0;line-height:1.5}
+.ref a{color:var(--green)}
+.linkbtn{border:none;background:none;color:var(--green);font-weight:800;font-size:.9em;padding:.6em;margin:6px auto 0;display:block}
+.steps{margin:.3em 0 0;padding-left:1.2em;font-weight:700;line-height:1.7}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+"use strict";
+
+/* =========================================================
+   데이터
+   ========================================================= */
+const ITEMS=[
+  {e:'🍎',n:'사과'},{e:'🍌',n:'바나나'},{e:'🐶',n:'강아지'},{e:'🐱',n:'고양이'},
+  {e:'🌸',n:'꽃'},{e:'🏠',n:'집'},{e:'☀️',n:'해'},{e:'🐟',n:'물고기'},
+  {e:'🍉',n:'수박'},{e:'🐔',n:'닭'},{e:'☂️',n:'우산'},{e:'🥕',n:'당근'},
+  {e:'🍇',n:'포도'},{e:'🌙',n:'달'},{e:'🐻',n:'곰'},{e:'🔔',n:'종'}
+];
+const CAR='🚗';
+const PLACES=[{e:'🛋️',n:'소파'},{e:'🛏️',n:'침대'},{e:'📺',n:'텔레비전 옆'},{e:'🍽️',n:'식탁'},{e:'🚪',n:'현관'},{e:'🗄️',n:'서랍장'},{e:'🪴',n:'화분 옆'},{e:'🧺',n:'바구니'},{e:'🧥',n:'옷걸이'}];
+const OBJS=[{e:'👛',n:'지갑'},{e:'🔑',n:'열쇠'},{e:'👓',n:'안경'},{e:'💊',n:'약봉지'},{e:'☂️',n:'우산'},{e:'🧤',n:'장갑'},{e:'📕',n:'수첩'},{e:'📱',n:'휴대폰'}];
+const GOODS=[{e:'🥚',n:'달걀'},{e:'🥛',n:'우유'},{e:'🍞',n:'빵'},{e:'🧅',n:'양파'},{e:'🥕',n:'당근'},{e:'🐟',n:'생선'},{e:'🍎',n:'사과'},{e:'🍌',n:'바나나'},{e:'🧄',n:'마늘'},{e:'🥬',n:'배추'},{e:'🍚',n:'쌀'},{e:'🥔',n:'감자'},{e:'🍄',n:'버섯'},{e:'🍗',n:'닭고기'},{e:'🍊',n:'귤'},{e:'🧈',n:'두부'}];
+const STORIES=[
+ {t:'딸 영희가 전화했어요. 이번 주 토요일 점심때 집에 온대요. 올 때 귤 한 상자를 사 온대요.',
+  q:[{q:'누가 온대요?',a:'딸 영희',o:['아들 철수','손녀 지수','동생 순자']},
+     {q:'언제 온대요?',a:'토요일 점심',o:['일요일 저녁','금요일 아침','월요일 점심']},
+     {q:'무엇을 사 온대요?',a:'귤',o:['사과','떡','고기']}]},
+ {t:'병원에서 문자가 왔어요. 다음 주 화요일 오전 10시에 진료 예약이 있대요. 올 때 신분증을 꼭 가져오래요.',
+  q:[{q:'어디서 연락이 왔나요?',a:'병원',o:['은행','우체국','시장']},
+     {q:'몇 시 예약인가요?',a:'오전 10시',o:['오후 2시','오전 9시','오후 4시']},
+     {q:'무엇을 가져오래요?',a:'신분증',o:['통장','도장','우산']}]},
+ {t:'경로당에서 연락이 왔어요. 목요일 오후 2시에 다 같이 노래 교실을 한대요. 간식으로 떡을 준비한대요.',
+  q:[{q:'어디서 연락이 왔나요?',a:'경로당',o:['복지관','시장','은행']},
+     {q:'무엇을 한대요?',a:'노래 교실',o:['체조 교실','그림 교실','영화 보기']},
+     {q:'간식은 무엇이래요?',a:'떡',o:['빵','과일','식혜']}]},
+ {t:'손자 민수가 오늘 저녁에 전화한대요. 이번에 시험을 잘 봐서 자랑하고 싶대요. 다음 달에 놀러 온대요.',
+  q:[{q:'누가 전화한대요?',a:'손자 민수',o:['아들 철수','딸 영희','조카 수진']},
+     {q:'무엇을 자랑하고 싶대요?',a:'시험',o:['운동회','그림','새 옷']},
+     {q:'언제 놀러 온대요?',a:'다음 달',o:['내일','이번 주말','내년 봄']}]},
+ {t:'약국에서 알려 줬어요. 새로 받은 약은 아침밥을 먹고 한 알 드시래요. 물을 한 컵 같이 드시래요.',
+  q:[{q:'어디서 알려 줬나요?',a:'약국',o:['병원','경로당','은행']},
+     {q:'언제 먹나요?',a:'아침밥 먹고',o:['자기 전','점심 먹기 전','저녁 먹고']},
+     {q:'몇 알 먹나요?',a:'한 알',o:['두 알','세 알','반 알']}]},
+ {t:'옆집 순자 할머니가 놀러 왔어요. 시장에 새로 생긴 국숫집이 맛있대요. 금요일에 같이 가자고 했어요.',
+  q:[{q:'누가 놀러 왔나요?',a:'옆집 순자 할머니',o:['동생 영자','딸 영희','경로당 회장님']},
+     {q:'어디가 맛있대요?',a:'국숫집',o:['빵집','떡집','만둣집']},
+     {q:'언제 같이 가기로 했나요?',a:'금요일',o:['수요일','토요일','일요일']}]},
+ {t:'택배 아저씨가 문자를 보냈어요. 오늘 오후 3시쯤 상자를 현관 앞에 두고 간대요. 안에는 아들이 보낸 김치가 들어 있대요.',
+  q:[{q:'몇 시쯤 온대요?',a:'오후 3시',o:['오전 10시','오후 6시','낮 12시']},
+     {q:'어디에 두고 간대요?',a:'현관 앞',o:['경비실','우체통','옆집']},
+     {q:'상자 안에 무엇이 있대요?',a:'김치',o:['사과','이불','신발']}]},
+ {t:'아들 철수가 말했어요. 일요일 아침 9시에 차를 가지고 데리러 온대요. 다 같이 바닷가에 놀러 간대요.',
+  q:[{q:'언제 데리러 온대요?',a:'일요일 아침 9시',o:['토요일 저녁 6시','일요일 낮 12시','월요일 아침 9시']},
+     {q:'무엇을 가지고 온대요?',a:'차',o:['자전거','선물','우산']},
+     {q:'어디로 놀러 간대요?',a:'바닷가',o:['산','시장','공원']}]}
+];
+const WORDSETS=[
+  [{e:'🌳',n:'나무'},{e:'🧢',n:'모자'},{e:'🚲',n:'자전거'}],
+  [{e:'🏫',n:'학교'},{e:'🌹',n:'장미'},{e:'🥄',n:'숟가락'}],
+  [{e:'🐘',n:'코끼리'},{e:'☕',n:'커피'},{e:'🎈',n:'풍선'}],
+  [{e:'🚂',n:'기차'},{e:'🌻',n:'해바라기'},{e:'🧦',n:'양말'}]
+];
+const WORD_FOILS=[{e:'🏀',n:'공'},{e:'🍙',n:'주먹밥'},{e:'🐢',n:'거북이'},{e:'✈️',n:'비행기'},{e:'🎹',n:'피아노'},{e:'🍓',n:'딸기'},{e:'⌚',n:'시계'},{e:'🦋',n:'나비'},{e:'🚌',n:'버스'}];
+const THINGS=[{k:'wallet',e:'👛',n:'지갑'},{k:'key',e:'🔑',n:'열쇠'},{k:'glasses',e:'👓',n:'안경'},{k:'med',e:'💊',n:'약'},{k:'remote',e:'📺',n:'리모컨'},{k:'bankbook',e:'📕',n:'통장'}];
+const HOME_PLACES=['안방 서랍','안방 침대 옆','거실 소파','거실 TV 옆','부엌 식탁','현관 신발장','가방 안','외투 주머니'];
+
+const DOMAINS={
+  orient:{n:'날짜·시간 감각',ic:'📅',type:'또렷한 달력형',say:'날짜와 시간을 똑 부러지게 아시는 분이에요.'},
+  memory:{n:'말 기억력',ic:'📚',type:'이야기 박사형',say:'들은 이야기를 오래 기억하시는 분이에요.'},
+  space:{n:'물건 자리 기억',ic:'🧺',type:'척척 정리왕형',say:'물건 자리를 잘 기억하시는 분이에요.'},
+  attention:{n:'집중력',ic:'🎯',type:'집중 장인형',say:'한 가지에 차분히 집중하시는 분이에요.'},
+  speed:{n:'눈의 빠르기',ic:'⚡',type:'번개 눈형',say:'눈이 빠르고 반응이 날쌘 분이에요.'},
+  calc:{n:'계산력',ic:'🧮',type:'알뜰 계산왕형',say:'돈 계산이 정확하신 분이에요.'}
+};
+const DOMAIN_GAMES={orient:['today'],memory:['story','shop'],space:['place','cards'],attention:['order'],speed:['speed'],calc:['money']};
+/* 요일별 편성: [요일 놀이, 둘째 놀이]  (0=일요일) */
+const WEEK={0:['today','money'],1:['place','cards'],2:['story','order'],3:['shop','today'],4:['place','money'],5:['story','cards'],6:['shop','order']};
+const CHECK_EVERY=28;
+
+const KEY='brainwalk-v1';
+const DEF={name:'할머니',fs:1,voice:true,sound:true,
+  lv:{speed:{dur:1600,periph:false},cards:{pairs:3},order:{n:5},place:{k:2},story:{q:2},shop:{k:3},money:{lv:1},today:{clk:1}},
+  first:null,days:{},checks:[],things:{},alarm:{on:true,am:10,pm:19,asked:false}};
+const clone=o=>JSON.parse(JSON.stringify(o));
+function load(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(raw){
+      const o=JSON.parse(raw),d=clone(DEF),lv={};
+      for(const k in d.lv)lv[k]=Object.assign(d.lv[k],(o.lv||{})[k]||{});
+      return Object.assign(d,o,{lv,days:o.days||{},checks:o.checks||[],things:o.things||{},alarm:Object.assign(d.alarm,o.alarm||{})});
+    }
+  }catch(e){}
+  return clone(DEF);
+}
+let S=load();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));return true}catch(e){return false}}
+
+/* =========================================================
+   도구
+   ========================================================= */
+const app=document.getElementById('app');
+const rand=n=>Math.floor(Math.random()*n);
+const pick=a=>a[rand(a.length)];
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=rand(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
+const pad=n=>String(n).padStart(2,'0');
+const keyOf=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const fromKey=k=>{const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d)};
+const WD='일월화수목금토';
+const md=d=>`${d.getMonth()+1}월 ${d.getDate()}일`;
+const won=n=>n.toLocaleString('ko-KR')+'원';
+function batchim(w){w=String(w).trim();const c=w.charCodeAt(w.length-1)-0xAC00;return c>=0&&c<=11171&&c%28!==0}
+const eun=w=>w+(batchim(w)?'은':'는');
+const eul=w=>w+(batchim(w)?'을':'를');
+const ieyo=w=>w+(batchim(w)?'이에요':'예요');
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+const strip=h=>h.replace(/<[^>]+>/g,'');
+function season(m){return m>=3&&m<=5?'봄':m>=6&&m<=8?'여름':m>=9&&m<=11?'가을':'겨울'}
+function todayCount(){return (S.days[keyOf(new Date())]||{}).s||0}
+function applyFont(){document.documentElement.style.setProperty('--fs',S.fs)}
+let RUN=0;
+function later(fn,ms){const my=RUN;setTimeout(()=>{if(my===RUN)fn()},ms)}
+function view(html){ON_HOME=false;app.innerHTML=html;window.scrollTo(0,0)}
+const $=s=>app.querySelector(s);
+const $$=s=>[...app.querySelectorAll(s)];
+
+/* 앱(안드로이드)으로 실행 중인지 */
+const CAP=window.Capacitor;
+const NATIVE=!!(CAP&&CAP.isNativePlatform&&CAP.isNativePlatform());
+const PL=NATIVE?(CAP.Plugins||{}):{};
+
+/* 음성 */
+let koVoice=null;
+function pickVoice(){try{const vs=speechSynthesis.getVoices();koVoice=vs.find(v=>/^ko/i.test(v.lang))||null}catch(e){}}
+if('speechSynthesis' in window){pickVoice();try{speechSynthesis.onvoiceschanged=pickVoice}catch(e){}}
+function speak(t){
+  if(!S.voice)return;
+  if(NATIVE&&PL.TextToSpeech){try{PL.TextToSpeech.speak({text:strip(t),lang:'ko-KR',rate:.9}).catch(()=>{})}catch(e){}return}
+  if(!('speechSynthesis' in window))return;
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(strip(t));u.lang='ko-KR';if(koVoice)u.voice=koVoice;u.rate=.88;speechSynthesis.speak(u)}catch(e){}
+}
+function hush(){if(NATIVE&&PL.TextToSpeech){try{PL.TextToSpeech.stop().catch(()=>{})}catch(e){}return}try{speechSynthesis.cancel()}catch(e){}}
+
+/* 효과음 */
+let AC=null;
+function tone(freqs,dur=.16,type='sine',vol=.16){
+  if(!S.sound)return;
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==='suspended')AC.resume();
+    const t=AC.currentTime;
+    freqs.forEach((f,i)=>{
+      const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;
+      const s=t+i*dur;g.gain.setValueAtTime(0,s);g.gain.linearRampToValueAtTime(vol,s+.02);
+      g.gain.exponentialRampToValueAtTime(.001,s+dur*1.8);o.connect(g);g.connect(AC.destination);o.start(s);o.stop(s+dur*2);
+    });
+  }catch(e){}
+}
+const good=()=>tone([660,880,1046],.12);
+const soft=()=>tone([330,294],.16,'triangle',.1);
+const tick=()=>tone([784],.07,'sine',.12);
+
+function top(title,step,back){
+  return `<div class="topbar"><button class="stop" data-a="home">${back?'← 처음으로':'✕ 그만하기'}</button><span class="step">${title}${step?' · '+step:''}</span></div>`;
+}
+/* 객관식 화면 */
+function choose(head,prompt,body,opts,cb,cols){
+  const c=cols||(opts.length===4?2:opts.length);
+  view(`${head}<div class="prompt">${prompt}</div>${body||''}
+    <div class="choices" style="--c:${c}">${opts.map((o,i)=>`<button class="choice${o.e?'':' txt'}" data-i="${i}">${o.e?`<span class="em">${o.e}</span>`:''}${o.t}</button>`).join('')}</div>`);
+  let done=false;
+  $$('.choice').forEach(b=>b.onclick=()=>{if(done)return;done=true;cb(opts[+b.dataset.i],b)});
+}
+/* 잠깐 딴생각(방해 과제): 사과 세기 */
+function countBreak(head,cb){
+  const N=3+rand(5);
+  const opts=shuffle([N-1,N,N+1]).map(v=>({t:v+'개',v}));
+  choose(head,'잠깐! 🍎 사과가 몇 개인가요?',`<div class="apples">${'🍎'.repeat(N)}</div>`,opts,(o,b)=>{
+    if(o.v===N){b.classList.add('right');tick()}else{b.classList.add('wrong');soft()}
+    later(cb,700);
+  },3);
+}
+function stars(score){const n=Math.max(1,Math.min(5,Math.ceil(score/20)));return '★'.repeat(n)+'☆'.repeat(5-n)}
+
+/* =========================================================
+   알림 (앱으로 설치했을 때만)
+   ========================================================= */
+async function setupAlarms(ask){
+  const LN=PL.LocalNotifications;
+  if(!NATIVE||!LN)return false;
+  try{
+    let p=await LN.checkPermissions();
+    if(p.display!=='granted'){
+      if(!ask)return false;
+      p=await LN.requestPermissions();
+      if(p.display!=='granted')return false;
+    }
+    try{await LN.createChannel({id:'walk',name:'두뇌 산책 알림',description:'매일 두뇌 산책과 두뇌 체크 알림',importance:4,vibration:true,visibility:1})}catch(e){}
+    const pend=await LN.getPending();
+    if(pend&&pend.notifications&&pend.notifications.length)await LN.cancel({notifications:pend.notifications.map(n=>({id:n.id}))});
+    const list=[];
+    if(S.alarm.on){
+      list.push({id:1,channelId:'walk',title:'🌸 두뇌 산책 할 시간이에요',body:`${S.name}, 오늘의 두뇌 산책 5분 함께해요!`,schedule:{on:{hour:+S.alarm.am,minute:0},allowWhileIdle:true}});
+      list.push({id:2,channelId:'walk',title:'🌻 저녁 두뇌 산책',body:`${S.name}, 하루 마무리로 한 번 더 해 볼까요?`,schedule:{on:{hour:+S.alarm.pm,minute:0},allowWhileIdle:true}});
+      const du=daysUntilCheck();
+      if(du){
+        let at=new Date(du.due);at.setHours(+S.alarm.am,30,0,0);
+        if(at<=new Date()){at=new Date();at.setDate(at.getDate()+1);at.setHours(+S.alarm.am,30,0,0)}
+        list.push({id:3,channelId:'walk',title:'🧭 두뇌 체크 하는 날이에요',body:'4주 만에 두뇌 체크를 해 볼까요? 10분이면 돼요.',schedule:{at,allowWhileIdle:true}});
+      }
+    }
+    if(list.length)await LN.schedule({notifications:list});
+    return true;
+  }catch(e){return false}
+}
+async function turnOnAlarms(){
+  const ok=await setupAlarms(true);
+  S.alarm.asked=true;if(ok)S.alarm.on=true;save();
+  home();
+  if(ok){good();speak(`알림을 켰어요. 매일 오전 ${S.alarm.am}시와 저녁 ${S.alarm.pm-12}시에 알려 드릴게요.`)}
+}
+
+/* =========================================================
+   홈
+   ========================================================= */
+function lastCheck(){return S.checks.length?S.checks[S.checks.length-1]:null}
+function daysUntilCheck(){
+  const l=lastCheck();if(!l)return null;
+  const due=fromKey(l.date);due.setDate(due.getDate()+CHECK_EVERY);
+  const t=fromKey(keyOf(new Date()));
+  return {left:Math.round((due-t)/86400000),due};
+}
+function weakDomains(c){return Object.keys(DOMAINS).filter(x=>x!=='speed').sort((a,z)=>c.scores[a]-c.scores[z]).slice(0,2)}
+function lineup(d){
+  const [b,c]=WEEK[d.getDay()];
+  const l=lastCheck();
+  if(!l)return [{k:'speed'},{k:b},{k:c}];
+  const recs=[...new Set(weakDomains(l).flatMap(w=>DOMAIN_GAMES[w]))].filter(x=>x!==b&&x!=='speed');
+  const di=Math.floor((d.getTime()-d.getTimezoneOffset()*60000)/86400000);
+  return [{k:'speed'},{k:b},recs.length?{k:recs[di%recs.length],rec:true}:{k:c}];
+}
+let ON_HOME=false;
+function home(){
+  RUN++;hush();ON_HOME=true;
+  const d=new Date(),h=d.getHours();
+  const hi=h<11?'좋은 아침이에요':h<17?'좋은 오후예요':'편안한 저녁이에요';
+  const c=todayCount(),lu=lineup(d);
+  let week='';
+  for(let i=6;i>=0;i--){
+    const x=new Date(d);x.setDate(d.getDate()-i);
+    const s=(S.days[keyOf(x)]||{}).s||0;
+    week+=`<div class="day${i===0?' today':''}"><div class="dot">${s>=2?'🌻':s===1?'🌸':''}</div>${i===0?'오늘':WD[x.getDay()]}</div>`;
+  }
+  const msg=c===0?'오늘은 아직 안 하셨어요':c===1?'한 번 더 하면 오늘 목표 달성!':'오늘 목표를 다 채우셨어요 🎉';
+  const du=daysUntilCheck();
+  let checkCard;
+  if(!du)checkCard=`<button class="tool-btn" data-a="check" style="background:#FFF6DF;border-color:#F0D58E;box-shadow:0 4px 0 #F0D58E"><span class="ti">🧭</span><span><b>첫 두뇌 체크 해 보기</b><span class="s">10분쯤 · 결과에 맞춰 놀이를 골라 드려요</span></span></button>`;
+  else if(du.left<=0)checkCard=`<button class="tool-btn" data-a="check" style="background:#FFF6DF;border-color:#F0D58E;box-shadow:0 4px 0 #F0D58E"><span class="ti">🧭</span><span><b>오늘은 두뇌 체크 하는 날!</b><span class="s">4주 만에 다시 해 봐요 · 10분쯤</span></span></button>`;
+  else checkCard=`<button class="tool-btn" data-a="checkResult"><span class="ti">🧭</span><span><b>내 두뇌 유형: ${DOMAINS[lastCheck().type].type}</b><span class="s">다음 두뇌 체크: ${md(du.due)} (${du.left}일 남음)</span></span></button>`;
+  view(`
+    <div class="date">${d.getMonth()+1}월 ${d.getDate()}일 ${WD[d.getDay()]}요일</div>
+    <h1>${esc(S.name)}, ${hi} 😊</h1>
+    <div class="card">
+      <div class="today-line"><span>오늘의 두뇌 산책</span>
+        <span class="pips"><span class="pip ${c>=1?'on':''}">${c>=1?'✓':'1'}</span><span class="pip ${c>=2?'on':''}">${c>=2?'✓':'2'}</span></span>
+      </div>
+      <p class="small">${msg}</p>
+      <div class="chips">${lu.map(x=>`<span class="chip${x.rec?' rec':''}">${GAMES[x.k].icon} ${GAMES[x.k].title}${x.rec?' · 맞춤':''}</span>`).join('')}</div>
+    </div>
+    ${NATIVE&&!S.alarm.asked?`<button class="tool-btn" data-a="alarmOn" style="background:#F1F8F3;border-color:#C5E0D0;box-shadow:0 4px 0 #C5E0D0"><span class="ti">🔔</span><span><b>매일 알림 켜기</b><span class="s">오전 ${S.alarm.am}시 · 저녁 ${S.alarm.pm-12}시에 알려 드려요</span></span></button>`:''}
+    <button class="big-btn" data-a="start">▶ 두뇌 산책 시작</button>
+    <p class="hint">놀이 세 가지 · 5~7분 · 요일마다 바뀌어요</p>
+    ${checkCard}
+    <button class="tool-btn" data-a="things"><span class="ti">👛</span><span><b>물건 어디 뒀지?</b><span class="s">지갑·열쇠 둔 곳 적어 두기</span></span></button>
+    <div class="card">
+      <h2>이번 주</h2>
+      <div class="week">${week}</div>
+    </div>
+    <div class="row">
+      <button class="sub-btn" data-a="records">📒 나의 기록</button>
+      <button class="sub-btn" data-a="settings">⚙️ 설정</button>
+    </div>
+    <button class="linkbtn" data-a="evidence">📖 이 앱의 연구 근거 보기</button>
+    <p class="note" style="padding-top:8px">즐겁게 두뇌를 쓰는 습관을 위한 앱이에요. 진단이나 치료를 대신하지 않아요.<br>만 60세 이상이면 가까운 치매안심센터에서 무료로 검사를 받을 수 있어요.</p>
+  `);
+  ON_HOME=true;
+}
+
+/* =========================================================
+   놀이들
+   ========================================================= */
+
+/* 1. 빨리 보기 (처리속도) */
+function speedGame(done){
+  const L=S.lv.speed;
+  if(!S.first)S.first={dur:L.dur,periph:L.periph,date:keyOf(new Date())};
+  const N=10,OUT=[0,1,2,3,5,6,7,8];
+  let t=0,correct=0,streak=0,up=false;
+  const blank=()=>Array.from({length:9},()=>({}));
+  const arena=cells=>`<div class="arena">${cells.map((c,i)=>`<div class="cell${i===4?' center':''}${c.cls?' '+c.cls:''}">${c.t||''}</div>`).join('')}</div>`;
+  const head=()=>top('빨리 보기',t+' / '+N);
+  const frame=(p,body,cls)=>view(`${head()}<div class="prompt${cls?' '+cls:''}">${p}</div>${body}`);
+  function next(){
+    if(t>=N){
+      if(up){L.periph=true;L.dur=1800}
+      save();return done({k:'speed',line:`${N}번 중 <b>${correct}번</b> 맞히셨어요`,up});
+    }
+    t++;
+    const pool=shuffle(ITEMS.slice()),target=pool[0];
+    const nc=(!L.periph&&L.dur>1100)?2:3;
+    const choices=shuffle(pool.slice(0,nc));
+    const pos=L.periph?OUT[rand(8)]:-1;
+    const c=blank();c[4].t='<span class="plus">＋</span>';
+    frame('가운데를 봐 주세요',arena(c));
+    later(()=>{
+      const c=blank();c[4].t=target.e;if(pos>=0)c[pos].t=CAR;
+      frame('&nbsp;',arena(c));
+      later(()=>{
+        frame('&nbsp;',arena(blank().map(()=>({cls:'mask'}))));
+        later(()=>{
+          choose(head(),'가운데에 무엇이 있었나요?','',choices.map(x=>({e:x.e,t:x.n,x})),o=>{
+            const ok1=o.x===target;
+            if(pos>=0)askPos(target,pos,ok1);else finish(ok1,target,pos,ok1);
+          },choices.length);
+        },300);
+      },L.dur);
+    },900);
+  }
+  function askPos(target,pos,ok1){
+    tick();
+    const cells=Array.from({length:9},(_,i)=>i===4?`<div class="cell center"><span class="qm">?</span></div>`:`<button class="cell pbtn" data-i="${i}"></button>`).join('');
+    frame(`자동차 ${CAR}는 어디에 있었나요?`,`<div class="arena">${cells}</div>`);
+    $$('.pbtn').forEach(b=>b.onclick=()=>finish(ok1&&+b.dataset.i===pos,target,pos,ok1));
+  }
+  function finish(ok,target,pos,ok1){
+    if(ok){correct++;streak++;good();if(streak>=2){L.dur=Math.max(250,Math.round(L.dur*.85));streak=0}}
+    else{streak=0;soft();L.dur=Math.min(3000,Math.round(L.dur*1.2))}
+    if(!L.periph&&L.dur<=600)up=true;
+    const c=blank();c[4].t=target.e;if(pos>=0){c[pos].t=CAR;c[pos].cls='hl'}
+    let msg;
+    if(ok)msg=pick(['맞았어요! 👍','정확해요! 👏','아주 좋아요! 😊','눈이 정말 빠르세요!']);
+    else if(pos>=0&&ok1)msg='그림은 맞았어요! 자동차는 여기 있었어요';
+    else msg=`괜찮아요, 정답은 ${target.e} ${target.n}${batchim(target.n)?'이었어요':'였어요'}`;
+    frame(msg,arena(c),ok?'ok':'no');
+    later(next,ok?1100:2100);
+  }
+  next();
+}
+
+/* 2. 짝 맞추기 (위치 기억) */
+function cardsGame(done){
+  const P=S.lv.cards.pairs;
+  const its=shuffle(ITEMS.slice()).slice(0,P);
+  const deck=shuffle([...its,...its]).map(x=>({e:x.e,up:true,done:false}));
+  const cols=P<=3?3:4;
+  let open=[],matched=0,moves=0,lock=true;
+  view(`${top('짝 맞추기','카드 '+P+'쌍')}<div class="prompt" id="pr">그림 자리를 잘 기억해 두세요</div>
+    <div class="cards" style="--c:${cols}">${deck.map((c,i)=>`<button class="mcard" data-i="${i}"></button>`).join('')}</div>`);
+  const btns=$$('.mcard'),pr=$('#pr');
+  const paint=i=>{const c=deck[i],b=btns[i];b.className='mcard'+(c.done?' done':c.up?' up':'');b.innerHTML=(c.up||c.done)?c.e:'<span class="q">?</span>'};
+  deck.forEach((_,i)=>paint(i));
+  later(()=>{deck.forEach((c,i)=>{c.up=false;paint(i)});lock=false;pr.textContent='같은 그림 두 장을 찾아 주세요'},2000+P*800);
+  btns.forEach((b,i)=>b.onclick=()=>{
+    const c=deck[i];
+    if(lock||c.up||c.done)return;
+    c.up=true;paint(i);tick();open.push(i);
+    if(open.length<2)return;
+    moves++;const [a,z]=open;open=[];
+    if(deck[a].e===deck[z].e){
+      deck[a].done=deck[z].done=true;paint(a);paint(z);good();matched++;
+      pr.textContent=pick(['찾았어요! 👏','맞아요, 같은 그림이에요!','기억력이 참 좋으세요!']);
+      if(matched===P){
+        lock=true;let up=false;
+        if(moves<=P+2&&P<6){S.lv.cards.pairs=P+1;up=true}
+        else if(moves>P*3&&P>2)S.lv.cards.pairs=P-1;
+        save();
+        later(()=>done({k:'cards',line:`<b>${moves}번</b> 만에 짝을 다 찾으셨어요`,up}),900);
+      }
+    }else{
+      lock=true;
+      later(()=>{deck[a].up=deck[z].up=false;paint(a);paint(z);lock=false;pr.textContent='아쉬워요, 다시 찾아볼까요?'},1200);
+    }
+  });
+}
+
+/* 3. 순서대로 누르기 (집중력) */
+function orderGame(done){
+  const n=S.lv.order.n;
+  const cells=n<=6?9:n<=9?12:16,cols=cells===16?4:3;
+  const map=Array(cells).fill(0);
+  shuffle([...Array(cells).keys()]).slice(0,n).forEach((s,i)=>map[s]=i+1);
+  let nx=1,err=0;
+  view(`${top('순서대로 누르기','1부터 '+n+'까지')}<div class="prompt" id="pr">지금 누를 숫자 <span class="nx">1</span></div>
+    <div class="ngrid" style="--c:${cols}">${map.map(v=>v?`<button class="num" data-v="${v}">${v}</button>`:`<div class="num empty"></div>`).join('')}</div>`);
+  const pr=$('#pr'),t0=performance.now();
+  $$('.num[data-v]').forEach(b=>b.onclick=()=>{
+    if(nx>n||b.classList.contains('got'))return;
+    const v=+b.dataset.v;
+    if(v===nx){
+      b.classList.add('got');nx++;
+      if(nx>n){
+        good();pr.innerHTML='다 누르셨어요! 👏';
+        const time=(performance.now()-t0)/1000;let up=false;
+        if(err<=1&&time<n*2.2&&n<12){S.lv.order.n=n+1;up=true}
+        else if(err>=3&&n>4)S.lv.order.n=n-1;
+        save();
+        later(()=>done({k:'order',line:`<b>${Math.round(time)}초</b> 만에 다 누르셨어요`,up}),800);
+      }else{tick();pr.innerHTML=`지금 누를 숫자 <span class="nx">${nx}</span>`}
+    }else{
+      err++;soft();b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');
+      pr.innerHTML=`천천히 찾아보세요 <span class="nx">${nx}</span>`;
+    }
+  });
+}
+
+/* 4. 물건 자리 기억 */
+function roomHTML(o){
+  o=o||{};
+  return `<div class="room">${PLACES.map((p,i)=>{
+    const cls=o.cls&&o.cls[i]?' '+o.cls[i]:'';
+    const obj=o.items&&o.items[i]?`<span class="obj">${o.items[i]}</span>`:'';
+    const tag=o.click?'button':'div';
+    return `<${tag} class="tile${cls}" data-i="${i}"><span class="pe">${p.e}</span>${p.n}${obj}</${tag}>`;
+  }).join('')}</div>`;
+}
+function placeGame(done){
+  const ROUNDS=2;let round=0,tot=0,cor=0,up=false;
+  const head=()=>top('물건 자리 기억',(round)+' / '+ROUNDS);
+  function startRound(){
+    if(round>=ROUNDS){save();return done({k:'place',line:`${tot}개 중 <b>${cor}개</b> 자리를 기억하셨어요`,up})}
+    round++;
+    const k=S.lv.place.k;
+    const objs=shuffle(OBJS.slice()).slice(0,k);
+    const spots=shuffle([...Array(9).keys()]).slice(0,k);
+    let i=0;
+    view(`${head()}<div class="prompt">물건을 어디에 두는지 잘 보세요</div>${roomHTML()}`);
+    speak('물건을 어디에 두는지 잘 보세요');
+    later(showOne,1600);
+    function showOne(){
+      if(i>=k){later(()=>countBreak(head(),askAll),400);return}
+      const o=objs[i],p=PLACES[spots[i]],items={},cls={};
+      items[spots[i]]=o.e;cls[spots[i]]='hl';
+      const txt=`${o.e} ${eul(o.n)} <b>${p.n}</b>에 뒀어요`;
+      view(`${head()}<div class="prompt">${txt}</div>${roomHTML({items,cls})}`);
+      speak(`${eul(o.n)} ${p.n}에 뒀어요`);
+      i++;later(showOne,2800);
+    }
+    function askAll(){
+      const order=shuffle([...Array(k).keys()]);let j=0,rc=0;
+      ask();
+      function ask(){
+        if(j>=k){
+          tot+=k;cor+=rc;
+          if(rc===k&&k<5){S.lv.place.k=k+1;up=true}
+          else if(rc<=k/2&&k>2)S.lv.place.k=k-1;
+          save();return startRound();
+        }
+        const idx=order[j],o=objs[idx];
+        view(`${head()}<div class="prompt">${o.e} ${eun(o.n)} 어디에 뒀나요?</div>${roomHTML({click:true})}`);
+        speak(`${eun(o.n)} 어디에 뒀나요?`);
+        let answered=false;
+        $$('.tile').forEach(b=>b.onclick=()=>{
+          if(answered)return;answered=true;
+          const sel=+b.dataset.i,ok=sel===spots[idx],cls={},items={};
+          items[spots[idx]]=o.e;cls[spots[idx]]='ok';if(!ok)cls[sel]='bad';
+          if(ok){rc++;good()}else soft();
+          view(`${head()}<div class="prompt ${ok?'ok':'no'}">${ok?pick(['맞았어요! 👍','정확해요! 👏']):`괜찮아요, ${eun(o.n)} ${PLACES[spots[idx]].n}에 있었어요`}</div>${roomHTML({items,cls})}`);
+          j++;later(ask,ok?1100:2200);
+        });
+      }
+    }
+  }
+  startRound();
+}
+
+/* 5. 이야기 기억 */
+function storyGame(done){
+  const ROUNDS=2,qn=S.lv.story.q;let round=0,tot=0,cor=0,up=false;
+  const used=shuffle([...Array(STORIES.length).keys()]).slice(0,ROUNDS);
+  const head=()=>top('이야기 기억',round+' / '+ROUNDS);
+  let reasked=false;
+  function startRound(){
+    if(round>=ROUNDS&&!reasked){
+      reasked=true;
+      const st=STORIES[used[0]],q=st.q[0];
+      view(`${head()}<div class="prompt">한 번 더! 처음 들은 이야기 기억나세요?</div><div class="icon-big">💭</div>`);
+      speak('한 번 더! 처음 들은 이야기 기억나세요?');
+      later(()=>{
+        speak(q.q);
+        choose(head(),'처음 이야기 · '+q.q,'',shuffle([q.a,...q.o]).map(t=>({t})),(o,b)=>{
+          tot++;
+          if(o.t===q.a){cor++;good();b.classList.add('right')}
+          else{soft();b.classList.add('wrong');$$('.choice').forEach(x=>{if(x.textContent===q.a)x.classList.add('right')})}
+          later(startRound,o.t===q.a?1000:1900);
+        },1);
+      },1800);
+      return;
+    }
+    if(round>=ROUNDS){
+      if(cor===tot&&qn<3){S.lv.story.q=3;up=true}
+      else if(cor<=tot/2&&qn>2)S.lv.story.q=2;
+      save();return done({k:'story',line:`${tot}문제 중 <b>${cor}문제</b> 기억하셨어요`,up});
+    }
+    const st=STORIES[used[round]];round++;
+    view(`${head()}<div class="prompt">잘 듣고 기억해 주세요</div>
+      <div class="card story">${st.t}</div>
+      <button class="listen" id="ag">🔊 다시 듣기</button>
+      <button class="big-btn" id="ok">다 들었어요 ▶</button>`);
+    speak(st.t);
+    $('#ag').onclick=()=>speak(st.t);
+    $('#ok').onclick=()=>{hush();tick();countBreak(head(),()=>ask(st,0))};
+  }
+  function ask(st,j){
+    const qs=st.q.slice(0,qn);
+    if(j>=qs.length)return startRound();
+    const q=qs[j];
+    const opts=shuffle([q.a,...q.o]).map(t=>({t}));
+    speak(q.q);
+    choose(head(),q.q,'',opts,(o,b)=>{
+      tot++;
+      if(o.t===q.a){cor++;good();b.classList.add('right')}
+      else{soft();b.classList.add('wrong');$$('.choice').forEach(x=>{if(x.textContent===q.a)x.classList.add('right')})}
+      later(()=>ask(st,j+1),o.t===q.a?1000:1900);
+    },1);
+  }
+  startRound();
+}
+
+/* 6. 장보기 기억 */
+function shopGame(done){
+  const ROUNDS=2;let round=0,tot=0,hitsAll=0,up=false;
+  const head=()=>top('장보기 기억',round+' / '+ROUNDS);
+  function startRound(){
+    if(round>=ROUNDS){save();return done({k:'shop',line:`살 것 ${tot}개 중 <b>${hitsAll}개</b>를 기억하셨어요`,up})}
+    round++;
+    const k=S.lv.shop.k;
+    const pool=shuffle(GOODS.slice()),list=pool.slice(0,k);
+    const size=k>=5?12:9;
+    const board=shuffle(pool.slice(0,size));
+    view(`${head()}<div class="prompt">🛒 오늘 시장에서 살 것이에요</div>
+      <div class="card"><div class="shoplist">${list.map(g=>`<div><span>${g.e}</span>${g.n}</div>`).join('')}</div></div>`);
+    speak('오늘 살 것은 '+list.map(g=>g.n).join(', ')+'이에요');
+    later(()=>{
+      view(`${head()}<div class="prompt">🚶 시장까지 걸어가는 중이에요…</div><div class="icon-big">🏪</div>`);
+      later(choosePhase,2600);
+    },2600+k*1500);
+    function choosePhase(){
+      const sel=new Set();
+      view(`${head()}<div class="prompt">살 것을 모두 골라 주세요 (${k}개)</div>
+        <div class="choices" style="--c:${size===12?4:3}">${board.map((g,i)=>`<button class="choice" data-i="${i}"><span class="em">${g.e}</span>${g.n}</button>`).join('')}</div>
+        <button class="big-btn" id="fin" disabled>다 골랐어요</button>`);
+      speak('살 것을 모두 골라 주세요');
+      const fin=$('#fin');
+      $$('.choice').forEach(b=>b.onclick=()=>{
+        const i=+b.dataset.i;
+        if(sel.has(i))sel.delete(i);else sel.add(i);
+        b.classList.toggle('sel');tick();fin.disabled=sel.size===0;
+      });
+      fin.onclick=()=>{
+        let hits=0,fa=0;
+        $$('.choice').forEach(b=>{
+          const i=+b.dataset.i,inList=list.includes(board[i]);
+          b.classList.remove('sel');b.onclick=null;
+          if(sel.has(i)&&inList){hits++;b.classList.add('right')}
+          else if(sel.has(i)){fa++;b.classList.add('wrong')}
+          else if(inList)b.classList.add('miss');
+        });
+        tot+=k;hitsAll+=hits;
+        if(hits===k&&fa===0&&k<7){S.lv.shop.k=k+1;up=true}
+        else if(hits<k-1&&k>3)S.lv.shop.k=k-1;
+        save();
+        if(hits===k)good();else soft();
+        const p=$('.prompt');p.className='prompt '+(hits===k?'ok':'no');
+        p.innerHTML=hits===k?'다 맞히셨어요! 👏':`${k}개 중 ${hits}개 맞히셨어요. 점선이 빠진 물건이에요`;
+        fin.textContent='다음 ▶';fin.onclick=()=>{tick();startRound()};
+      };
+    }
+  }
+  startRound();
+}
+
+/* 7. 계산 (돈 계산) */
+function moneyQ(lv){
+  const A=[{e:'🍎',n:'사과'},{e:'🥛',n:'우유'},{e:'🍞',n:'빵'},{e:'🥚',n:'달걀'},{e:'🐟',n:'생선'},{e:'🍊',n:'귤'}];
+  const [x,y]=shuffle(A.slice());
+  if(lv===1){
+    const a=pick([500,1000,1500,2000,3000]),b=pick([500,1000,2000,2500]);
+    return {q:`${x.e} ${x.n} ${won(a)}<br>${y.e} ${y.n} ${won(b)}<br><b>모두 얼마일까요?</b>`,a:a+b,d:[500,-500,1000]};
+  }
+  if(lv===2){
+    const pay=pick([5000,10000]),price=pick(pay===5000?[1200,2500,3800,4300]:[3500,6200,7500,8800]);
+    return {q:`${x.e} ${x.n} ${won(price)}짜리를 사고<br>💵 ${won(pay)}을 냈어요<br><b>거스름돈은 얼마일까요?</b>`,a:pay-price,d:[100,-100,1000,-1000]};
+  }
+  const a=pick([1500,2300,3200,4500]),b=pick([1200,2700,3500]);
+  return {q:`${x.e} ${x.n} ${won(a)}, ${y.e} ${y.n} ${won(b)}을 사고<br>💵 10,000원을 냈어요<br><b>거스름돈은 얼마일까요?</b>`,a:10000-a-b,d:[100,-100,1000,-1000]};
+}
+function moneyGame(done){
+  const L=S.lv.money,N=5;let t=0,cor=0;
+  const head=()=>top('장보기 계산',t+' / '+N);
+  function next(){
+    if(t>=N){
+      let up=false;
+      if(cor>=4&&L.lv<3){L.lv++;up=true}else if(cor<=2&&L.lv>1)L.lv--;
+      save();return done({k:'money',line:`${N}문제 중 <b>${cor}문제</b> 맞히셨어요`,up});
+    }
+    t++;
+    const q=moneyQ(L.lv);
+    const ds=shuffle(q.d.slice()).filter(v=>q.a+v>0).slice(0,2);
+    const opts=shuffle([q.a,...ds.map(v=>q.a+v)]).map(v=>({t:won(v),v}));
+    choose(head(),'천천히 계산해 보세요',`<div class="card money">${q.q}</div>`,opts,(o,b)=>{
+      if(o.v===q.a){cor++;good();b.classList.add('right')}
+      else{soft();b.classList.add('wrong');$$('.choice').forEach(x=>{if(x.textContent===won(q.a))x.classList.add('right')})}
+      later(next,o.v===q.a?1000:1900);
+    },1);
+  }
+  next();
+}
+
+/* 8. 오늘 알기 (날짜·시계) */
+function clockSVG(h,m){
+  const ha=((h%12)+m/60)*30,ma=m*6;
+  let nums='';
+  for(let i=1;i<=12;i++){const a=(i*30-90)*Math.PI/180;nums+=`<text x="${100+74*Math.cos(a)}" y="${100+74*Math.sin(a)+8}" text-anchor="middle" font-size="22" font-weight="900" fill="#2A211A" font-family="Noto Sans KR,sans-serif">${i}</text>`}
+  return `<svg class="clock" viewBox="0 0 200 200"><circle cx="100" cy="100" r="96" fill="#fff" stroke="#2F6E50" stroke-width="7"/>${nums}
+    <line x1="100" y1="100" x2="100" y2="52" stroke="#2A211A" stroke-width="9" stroke-linecap="round" transform="rotate(${ha} 100 100)"/>
+    <line x1="100" y1="100" x2="100" y2="30" stroke="#C8552F" stroke-width="5" stroke-linecap="round" transform="rotate(${ma} 100 100)"/>
+    <circle cx="100" cy="100" r="7" fill="#2A211A"/></svg>`;
+}
+const tlabel=(h,m)=>m===0?`${h}시`:`${h}시 ${m}분`;
+function todayGame(done){
+  const d=new Date(),L=S.lv.today;let t=0,cor=0,clkOk=0;const N=5;
+  const head=()=>top('오늘 알기',t+' / '+N);
+  const qs=[
+    ()=>{const w=d.getDay();return {p:'오늘은 무슨 요일인가요?',a:WD[w]+'요일',o:shuffle([1,2,3,4,5,6]).slice(0,3).map(x=>WD[(w+x)%7]+'요일')}},
+    ()=>{const o=[-1,1,7].map(x=>{const y=new Date(d);y.setDate(d.getDate()+x);return md(y)});return {p:'오늘은 몇 월 며칠인가요?',a:md(d),o}},
+    ()=>{const s=season(d.getMonth()+1);return {p:'지금은 무슨 계절인가요?',a:s,o:['봄','여름','가을','겨울'].filter(x=>x!==s)}},
+    ()=>clockQ(),()=>clockQ()
+  ];
+  function clockQ(){
+    const h=1+rand(12),m=L.clk>=2?pick([0,15,30,45]):pick([0,30]);
+    const h2=h%12+1,m2=m===0?30:m===30?0:(m+30)%60;
+    const o=[tlabel(h2,m),tlabel(h,m2)];
+    return {p:'시계가 몇 시를 가리키나요?',a:tlabel(h,m),o,body:clockSVG(h,m),clk:true};
+  }
+  function next(){
+    if(t>=N){
+      let up=false;if(clkOk===2&&L.clk<2){L.clk=2;up=true}
+      save();
+      const s=`오늘은 ${d.getFullYear()}년 ${md(d)} ${WD[d.getDay()]}요일, ${ieyo(season(d.getMonth()+1))}`;
+      view(`${head()}<div class="center-col"><div class="icon-big">📅</div><div class="card desc" style="text-align:center">${s}</div><button class="big-btn" id="nx">다음 ▶</button></div>`);
+      speak(s);
+      $('#nx').onclick=()=>done({k:'today',line:`${N}문제 중 <b>${cor}문제</b> 맞히셨어요`,up});
+      return;
+    }
+    const q=qs[t]();t++;
+    const opts=shuffle([q.a,...q.o]).map(x=>({t:x}));
+    speak(q.p);
+    choose(head(),q.p,q.body||'',opts,(o,b)=>{
+      if(o.t===q.a){cor++;if(q.clk)clkOk++;good();b.classList.add('right')}
+      else{soft();b.classList.add('wrong');$$('.choice').forEach(x=>{if(x.textContent===q.a)x.classList.add('right')})}
+      later(next,o.t===q.a?1000:2000);
+    },opts.length===4?2:1);
+  }
+  next();
+}
+
+const GAMES={
+  speed:{why:'미국 ACTIVE 연구에서 65세 이상 2,800여 명을 20년 동안 살펴봤더니, 이런 “빨리 보기” 훈련을 받고 1~3년 뒤 보충 훈련까지 한 분들은 치매 진단이 25% 적었어요.',icon:'👀',title:'빨리 보기',run:speedGame,
+    say:()=>S.lv.speed.periph?'가운데 그림과 함께, 바깥 어딘가에 자동차가 잠깐 나와요. 가운데 그림과 자동차 자리를 둘 다 맞혀 주세요.':'가운데에 그림이 잠깐 나왔다가 사라져요. 무슨 그림이었는지 맞혀 주세요.'},
+  cards:{why:'태블릿·컴퓨터 인지훈련을 다룬 여러 연구를 모아 보니, 경도인지장애가 있는 분들의 전반적인 인지 기능과 기억력이 조금씩 좋아졌어요.',icon:'🃏',title:'짝 맞추기',run:cardsGame,say:()=>'그림 카드를 잠깐 보여 드려요. 자리를 기억했다가, 같은 그림 두 장을 찾아 주세요.'},
+  order:{why:'숫자를 차례로 찾는 놀이는 주의력과 처리속도를 쓰는 훈련이에요. 컴퓨터 인지훈련 연구들에서 이런 과제가 함께 쓰였어요.',icon:'🔢',title:'순서대로 누르기',run:orderGame,say:()=>'1부터 차례대로 숫자를 눌러 주세요. 천천히 하셔도 괜찮아요.'},
+  place:{why:'물건 둔 곳을 기억하는 “위치 기억”을 직접 연습하는 놀이예요. 실제 생활에서 자주 깜빡하는 일을 그대로 연습하는 게 경도인지장애에 더 맞다는 연구가 있어요.',icon:'👛',title:'물건 자리 기억',run:placeGame,say:()=>'지갑이나 열쇠 같은 물건을 집 안 어디에 두는지 보여 드려요. 잘 봐 두셨다가 어디에 뒀는지 맞혀 주세요.'},
+  story:{why:'치매 재활에서 쓰는 “간격 두고 다시 떠올리기(spaced retrieval)” 방식을 넣었어요. 들은 내용을 시간을 두고 다시 떠올리는 연습으로, 같은 질문을 반복하는 문제를 줄이는 데 쓰여 온 방법이에요. 그래서 마지막에 첫 이야기를 한 번 더 여쭤봐요.',icon:'📞',title:'이야기 기억',run:storyGame,say:()=>'가족이나 이웃이 전해 준 이야기를 들려 드려요. 잘 듣고, 누가 언제 무엇을 했는지 기억해 주세요.'},
+  shop:{why:'단어 목록을 듣고 나중에 떠올리는 연습이에요. 코크란 리뷰에서 이런 기억 훈련을 하면 바로 떠올리기와 조금 뒤에 떠올리기 모두 좋아졌어요.',icon:'🛒',title:'장보기 기억',run:shopGame,say:()=>'오늘 시장에서 살 것을 보여 드려요. 잘 기억했다가 가게에서 빠짐없이 골라 주세요.'},
+  money:{why:'일본 가와시마 교수팀의 “학습요법”은 간단한 계산과 소리 내어 읽기를 하루 15~20분 하는 프로그램이에요. 무작위 대조시험에서 치매가 있는 분과 건강한 노인 모두 인지 기능이 유지되거나 좋아졌어요.',icon:'🧮',title:'장보기 계산',run:moneyGame,say:()=>'물건값을 보고 모두 얼마인지, 거스름돈이 얼마인지 계산해 주세요.'},
+  today:{why:'오늘 날짜·요일·계절을 짚어 보는 “현실 인식 훈련”이에요. 연구를 모은 분석에서 꾸준히 했을 때(총 600분 이상) 인지 기능이 좋아졌어요.',icon:'📅',title:'오늘 알기',run:todayGame,say:()=>'오늘이 무슨 요일인지, 지금 시계가 몇 시인지 맞혀 보는 놀이예요.'}
+};
+
+/* =========================================================
+   산책 흐름
+   ========================================================= */
+let SES=null;
+function startSession(){RUN++;SES={list:lineup(new Date()),i:0};intro()}
+function intro(){
+  const it=SES.list[SES.i],g=GAMES[it.k],text=g.say();
+  view(`${top('놀이 '+(SES.i+1)+' / '+SES.list.length)}
+    <div class="center-col">
+      <div class="icon-big">${g.icon}</div>
+      <h1 style="text-align:center;margin-bottom:.1em">${g.title}</h1>
+      ${it.rec?'<span class="badge">두뇌 체크 맞춤 놀이</span>':''}
+      <div class="card desc">${text}</div>
+      <button class="listen" id="again">🔊 설명 다시 듣기</button>
+      <details class="why"><summary>📖 왜 이 놀이를 하나요?</summary><p>${g.why}</p></details>
+      <button class="big-btn" id="go">시작하기</button>
+    </div>`);
+  speak(text);
+  $('#again').onclick=()=>speak(text);
+  $('#go').onclick=()=>{hush();tick();g.run(r=>result(r))};
+}
+function result(r){
+  const last=SES.i===SES.list.length-1;
+  const praise=pick(['참 잘하셨어요!','훌륭하세요!','멋지세요!','정말 잘하시네요!']);
+  view(`<div class="center-col" style="flex:1;justify-content:center">
+      <div class="icon-big">⭐</div>
+      <h1 style="text-align:center">${praise}</h1>
+      <div class="card desc" style="text-align:center">${r.line}</div>
+      ${r.up?'<p class="hint">솜씨가 늘어서 다음엔 한 단계 올라가요 ⬆️</p>':''}
+      <button class="big-btn" id="nx">${last?'산책 마치기 ▶':'다음 놀이 ▶'}</button>
+    </div>`);
+  speak(praise+' '+r.line);
+  $('#nx').onclick=()=>{tick();if(last)finishSession();else{SES.i++;intro()}};
+}
+function finishSession(){
+  const k=keyOf(new Date()),prev=S.days[k]||{};
+  S.days[k]={s:(prev.s||0)+1,dur:S.lv.speed.dur,periph:S.lv.speed.periph};
+  save();
+  const c=S.days[k].s;
+  const sub=c===1?'오늘 한 번 하셨어요. 저녁에 한 번 더 하면 더 좋아요.':c===2?'오늘 두 번 다 하셨어요! 내일은 다른 놀이로 만나요.':`오늘 벌써 ${c}번째예요! 대단하세요.`;
+  view(`<div class="center-col" style="flex:1;justify-content:center">
+      <div class="icon-big">${c>=2?'🌻':'🌸'}</div>
+      <h1 style="text-align:center">오늘의 두뇌 산책 끝!</h1>
+      <div class="card desc" style="text-align:center">${esc(S.name)}, 참 잘하셨어요.<br>${sub}</div>
+      <button class="big-btn" data-a="home">처음 화면으로</button>
+    </div>`);
+  speak(`오늘의 두뇌 산책 끝! ${S.name}, 참 잘하셨어요. ${sub}`);
+}
+
+/* =========================================================
+   두뇌 체크
+   ========================================================= */
+let CK=null;
+const CK_STEPS=7;
+function ckHead(n){return top('두뇌 체크',n+' / '+CK_STEPS)}
+function startCheck(){
+  RUN++;hush();
+  CK={words:pick(WORDSETS),scores:{}};
+  view(`${top('두뇌 체크','',true)}
+    <div class="center-col">
+      <div class="icon-big">🧭</div>
+      <h1 style="text-align:center">두뇌 체크</h1>
+      <div class="card desc" style="text-align:left">날짜 감각, 기억력, 집중력, 눈의 빠르기, 계산력, 물건 자리 기억을 하나씩 살펴봐요.<br><br>10분쯤 걸려요. 틀려도 괜찮으니 편하게 해 주세요.</div>
+      <p class="hint">결과에 맞춰 앞으로 할 놀이를 골라 드려요.<br>4주마다 다시 하면 변화를 볼 수 있어요.</p>
+      <button class="big-btn" id="go">시작하기</button>
+    </div>`);
+  speak('두뇌 체크를 시작해요. 틀려도 괜찮으니 편하게 해 주세요.');
+  $('#go').onclick=()=>{tick();ckRegister()};
+}
+/* 1. 단어 세 개 외우기 */
+function ckRegister(){
+  const w=CK.words;
+  view(`${ckHead(1)}<div class="prompt">이 세 가지를 꼭 기억해 주세요</div>
+    <div class="card"><div class="shoplist">${w.map(x=>`<div><span>${x.e}</span>${x.n}</div>`).join('')}</div></div>
+    <p class="hint">조금 있다가 다시 여쭤볼게요</p>
+    <button class="listen" id="ag">🔊 다시 듣기</button>
+    <button class="big-btn" id="ok">기억했어요 ▶</button>`);
+  const say='기억해 주세요. '+w.map(x=>x.n).join(', ');
+  speak(say);$('#ag').onclick=()=>speak(say);
+  $('#ok').onclick=()=>{hush();tick();ckOrient()};
+}
+/* 2. 날짜 감각 */
+function ckOrient(){
+  const d=new Date(),s=season(d.getMonth()+1);
+  const qs=[
+    {p:'오늘은 무슨 요일인가요?',a:WD[d.getDay()]+'요일',o:shuffle([1,2,3,4,5,6]).slice(0,3).map(x=>WD[(d.getDay()+x)%7]+'요일')},
+    {p:'지금은 몇 월인가요?',a:(d.getMonth()+1)+'월',o:[2,5,9].map(x=>((d.getMonth()+x)%12+1)+'월')},
+    {p:'지금은 무슨 계절인가요?',a:s,o:['봄','여름','가을','겨울'].filter(x=>x!==s)}
+  ];
+  let j=0,c=0;
+  (function ask(){
+    if(j>=qs.length){CK.scores.orient=Math.round(c/3*100);return ckSpeed()}
+    const q=qs[j++];speak(q.p);
+    choose(ckHead(2),q.p,'',shuffle([q.a,...q.o]).map(t=>({t})),o=>{if(o.t===q.a)c++;tick();later(ask,350)},2);
+  })();
+}
+/* 3. 눈의 빠르기: 같은 그림 빨리 찾기 */
+function ckSpeed(){
+  const N=6;let j=0,okN=0,rts=[];
+  view(`${ckHead(3)}<div class="center-col"><div class="icon-big">⚡</div><div class="card desc">위에 나온 그림과 <b>같은 그림</b>을<br>아래에서 빨리 찾아 눌러 주세요.</div><button class="big-btn" id="go">시작하기</button></div>`);
+  speak('위에 나온 그림과 같은 그림을 아래에서 빨리 찾아 눌러 주세요.');
+  $('#go').onclick=()=>{hush();trial()};
+  function trial(){
+    if(j>=N){
+      const avg=rts.length?rts.reduce((a,b)=>a+b,0)/rts.length:5;
+      const base=Math.max(20,Math.min(100,100-(avg-1.3)*32));
+      CK.scores.speed=Math.round(base*(okN/N));return ckAttention();
+    }
+    j++;
+    const pool=shuffle(ITEMS.slice()).slice(0,6),target=pick(pool);
+    view(`${ckHead(3)}<div class="prompt">이 그림을 찾아 주세요 <span style="font-size:1.8em;margin-left:.3em">${target.e}</span></div>
+      <div class="choices" style="--c:3">${pool.map((x,i)=>`<button class="choice" data-i="${i}"><span class="em">${x.e}</span></button>`).join('')}</div>`);
+    const t0=performance.now();let done=false;
+    $$('.choice').forEach(b=>b.onclick=()=>{
+      if(done)return;done=true;
+      const ok=pool[+b.dataset.i]===target;
+      if(ok){okN++;rts.push((performance.now()-t0)/1000);tick();b.classList.add('right')}else b.classList.add('wrong');
+      later(trial,450);
+    });
+  }
+}
+/* 4. 집중력: 숫자 따라 누르기 */
+function ckAttention(){
+  let len=3,tries=0,best=0;
+  view(`${ckHead(4)}<div class="center-col"><div class="icon-big">🎯</div><div class="card desc">숫자가 하나씩 나와요.<br>다 나오면 <b>나온 순서대로</b> 눌러 주세요.</div><button class="big-btn" id="go">시작하기</button></div>`);
+  speak('숫자가 하나씩 나와요. 다 나오면 나온 순서대로 눌러 주세요.');
+  $('#go').onclick=()=>{hush();round()};
+  function finish(){CK.scores.attention={0:15,3:40,4:60,5:80,6:100}[best];ckCalc()}
+  function round(){
+    const seq=[];while(seq.length<len){const v=1+rand(9);if(v!==seq[seq.length-1])seq.push(v)}
+    let i=0;
+    view(`${ckHead(4)}<div class="prompt">숫자를 잘 보세요 (${len}개)</div><div class="card"><div class="digit" id="dg"></div></div>`);
+    const dg=$('#dg');
+    (function show(){
+      if(i>=seq.length){dg.textContent='';later(input,400);return}
+      dg.textContent=seq[i];speak(String(seq[i]));i++;
+      later(()=>{dg.textContent='';later(show,250)},900);
+    })();
+    function input(){
+      const got=[];
+      view(`${ckHead(4)}<div class="prompt">나온 순서대로 눌러 주세요</div><div class="entered" id="en">&nbsp;</div>
+        <div class="keypad">${[1,2,3,4,5,6,7,8,9].map(v=>`<button class="key" data-v="${v}">${v}</button>`).join('')}</div>`);
+      speak('나온 순서대로 눌러 주세요');
+      const en=$('#en');let fin=false;
+      $$('.key').forEach(b=>b.onclick=()=>{
+        if(fin)return;tick();got.push(+b.dataset.v);en.textContent=got.join(' ');
+        if(got.length<len)return;
+        fin=true;
+        const ok=got.every((v,k)=>v===seq[k]);
+        const p=$('.prompt');p.className='prompt '+(ok?'ok':'no');
+        p.textContent=ok?'잘하셨어요!':'괜찮아요';
+        if(ok){best=len;tries=0;len++;if(len>6)return later(finish,700);later(round,800)}
+        else{tries++;if(tries>=2)return later(finish,700);later(round,800)}
+      });
+    }
+  }
+}
+/* 5. 계산력 */
+function ckCalc(){
+  const qs=[moneyQ(1),moneyQ(2),moneyQ(3)];let j=0,c=0;
+  (function ask(){
+    if(j>=qs.length){CK.scores.calc=Math.round(c/3*100);return ckSpace()}
+    const q=qs[j++];
+    const ds=shuffle(q.d.slice()).filter(v=>q.a+v>0).slice(0,2);
+    choose(ckHead(5),'천천히 계산해 보세요',`<div class="card money">${q.q}</div>`,shuffle([q.a,...ds.map(v=>q.a+v)]).map(v=>({t:won(v),v})),o=>{if(o.v===q.a)c++;tick();later(ask,350)},1);
+  })();
+}
+/* 6. 물건 자리 기억 */
+function ckSpace(){
+  const objs=shuffle(OBJS.slice()).slice(0,3),spots=shuffle([...Array(9).keys()]).slice(0,3);
+  let i=0;
+  view(`${ckHead(6)}<div class="prompt">물건을 어디에 두는지 잘 보세요</div>${roomHTML()}`);
+  speak('물건을 어디에 두는지 잘 보세요');
+  later(show,1600);
+  function show(){
+    if(i>=3){later(()=>countBreak(ckHead(6),ask),400);return}
+    const o=objs[i],items={},cls={};items[spots[i]]=o.e;cls[spots[i]]='hl';
+    view(`${ckHead(6)}<div class="prompt">${o.e} ${eul(o.n)} <b>${PLACES[spots[i]].n}</b>에 뒀어요</div>${roomHTML({items,cls})}`);
+    speak(`${eul(o.n)} ${PLACES[spots[i]].n}에 뒀어요`);
+    i++;later(show,2800);
+  }
+  let j=0,c=0;const order=shuffle([0,1,2]);
+  function ask(){
+    if(j>=3){CK.scores.space=Math.round(c/3*100);return ckRecall()}
+    const idx=order[j++],o=objs[idx];
+    view(`${ckHead(6)}<div class="prompt">${o.e} ${eun(o.n)} 어디에 뒀나요?</div>${roomHTML({click:true})}`);
+    speak(`${eun(o.n)} 어디에 뒀나요?`);
+    let done=false;
+    $$('.tile').forEach(b=>b.onclick=()=>{if(done)return;done=true;if(+b.dataset.i===spots[idx])c++;tick();b.classList.add('hl');later(ask,400)});
+  }
+}
+/* 7. 처음 단어 떠올리기 */
+function ckRecall(){
+  const w=CK.words,board=shuffle([...w,...shuffle(WORD_FOILS.slice()).slice(0,6)]);
+  const sel=new Set();
+  view(`${ckHead(7)}<div class="prompt">처음에 기억한 세 가지를 골라 주세요</div>
+    <div class="choices" style="--c:3">${board.map((x,i)=>`<button class="choice" data-i="${i}"><span class="em">${x.e}</span>${x.n}</button>`).join('')}</div>
+    <button class="big-btn" id="fin" disabled>다 골랐어요</button>
+    <button class="listen" id="dk">잘 생각이 안 나요</button>`);
+  speak('처음에 기억한 세 가지를 골라 주세요');
+  const fin=$('#fin');
+  $$('.choice').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i;
+    if(sel.has(i)){sel.delete(i);b.classList.remove('sel')}
+    else{if(sel.size>=3)return;sel.add(i);b.classList.add('sel')}
+    tick();fin.disabled=sel.size===0;
+  });
+  const end=()=>{
+    let hits=0;sel.forEach(i=>{if(w.includes(board[i]))hits++});
+    CK.scores.memory=Math.round(hits/3*100);ckFinish();
+  };
+  fin.onclick=end;$('#dk').onclick=end;
+}
+function ckFinish(){
+  const sc=CK.scores,keys=Object.keys(DOMAINS);
+  const total=Math.round(keys.reduce((a,k)=>a+sc[k],0)/keys.length);
+  let best=keys[0];keys.forEach(k=>{if(sc[k]>sc[best])best=k});
+  const prev=lastCheck();
+  S.checks.push({date:keyOf(new Date()),scores:sc,total,type:best,prevTotal:prev?prev.total:null});
+  save();good();
+  setupAlarms(false);
+  checkResult(true);
+}
+function checkResult(fresh){
+  RUN++;
+  const c=lastCheck();if(!c)return startCheck();
+  const sc=c.scores,ty=DOMAINS[c.type],weak=weakDomains(c);
+  const recG=[...new Set(weak.flatMap(w=>DOMAIN_GAMES[w]))].map(k=>GAMES[k].icon+' '+GAMES[k].title);
+  const concern=sc.memory<=34||sc.orient<=67||c.total<60;
+  const due=fromKey(c.date);due.setDate(due.getDate()+CHECK_EVERY);
+  let cmp='';
+  if(c.prevTotal!=null){const dlt=c.total-c.prevTotal;cmp=`<p class="small" style="text-align:center">지난번보다 ${dlt>=5?'좋아졌어요 ⬆️':dlt<=-5?'조금 내려갔어요. 컨디션 때문일 수도 있어요':'비슷하게 잘 유지하고 계세요 ➡️'}</p>`}
+  view(`${top('두뇌 체크 결과','',true)}
+    <div class="center-col">
+      <p class="small" style="text-align:center">${esc(S.name)}의 두뇌 유형은</p>
+      <div class="icon-big" style="margin-top:4px">${ty.ic}</div>
+      <h1 style="text-align:center;margin-bottom:.1em">${ty.type}</h1>
+      <p class="desc" style="margin:0">${ty.say}</p>
+      ${cmp}
+    </div>
+    <div class="card">
+      ${Object.keys(DOMAINS).map(k=>`<div class="stat"><span>${DOMAINS[k].ic} ${DOMAINS[k].n}</span><span class="stars">${stars(sc[k])}</span></div>`).join('')}
+    </div>
+    <div class="card gold">
+      <h2>더 키우면 좋은 곳</h2>
+      <p class="desc" style="margin:0">${weak.map(w=>DOMAINS[w].n).join(', ')}</p>
+      <p class="small">그래서 앞으로 <b>${recG.join(', ')}</b> 놀이를 맞춤 놀이로 더 자주 넣어 드려요.</p>
+    </div>
+    <div class="card ${concern?'gold':'mint'}">
+      ${concern
+        ?`<h2>가족과 함께 확인해 보세요</h2><p class="desc" style="margin:0;font-size:.95em">기억력 쪽 점수가 조금 낮게 나왔어요. 컨디션 때문일 수도 있지만, 가까운 <b>치매안심센터</b>에 가 보시길 권해요. 만 60세 이상이면 무료로 15분쯤 걸리는 검사를 받을 수 있어요.</p>`
+        :`<h2>잘하고 계세요</h2><p class="desc" style="margin:0;font-size:.95em">이 체크는 재미로 보는 두뇌 상태 확인이에요. 정확한 검사는 가까운 <b>치매안심센터</b>에서 만 60세 이상이면 무료로 받을 수 있어요.</p>`}
+    </div>
+    <p class="hint">다음 두뇌 체크: <b>${md(due)}</b> · 처음 화면에서 알려 드려요</p>
+    <button class="big-btn" data-a="home">처음 화면으로</button>`);
+  if(fresh)speak(`${S.name}의 두뇌 유형은 ${ty.type}! ${ty.say}`);
+}
+
+/* =========================================================
+   물건 자리 도우미
+   ========================================================= */
+function whenTxt(ts){
+  const d=new Date(ts),now=new Date();
+  const dd=Math.round((fromKey(keyOf(now))-fromKey(keyOf(d)))/86400000);
+  const h=d.getHours(),ap=h<12?'오전':'오후',hh=h%12||12,mm=d.getMinutes();
+  const t=`${ap} ${hh}시${mm?' '+mm+'분':''}`;
+  return dd===0?`오늘 ${t}`:dd===1?`어제 ${t}`:`${md(d)}`;
+}
+function things(){
+  RUN++;hush();
+  view(`${top('물건 자리 도우미','',true)}
+    <h1>물건 어디 뒀지? 👛</h1>
+    <p class="small" style="margin-bottom:6px">물건을 두실 때 여기에 적어 두세요. 나중에 누르면 어디 있는지 알려 드려요.</p>
+    ${THINGS.map(t=>{const r=S.things[t.k];return `<button class="thing" data-k="${t.k}"><span class="te">${t.e}</span><span class="tx"><b>${t.n}</b>${r?`<span>${esc(r.place)} · ${whenTxt(r.t)}</span>`:'<span class="none">아직 안 적었어요</span>'}</span>${r&&r.photo?`<img src="${r.photo}" alt="">`:''}</button>`}).join('')}
+    <button class="sub-btn" style="margin-top:12px" data-a="home">처음 화면으로</button>`);
+  $$('.thing').forEach(b=>b.onclick=()=>{tick();thingDetail(b.dataset.k)});
+}
+function thingDetail(k){
+  const t=THINGS.find(x=>x.k===k),r=S.things[k];
+  if(!r)return thingPick(k);
+  view(`${top(t.n,'',true)}
+    <div class="center-col">
+      <div class="icon-big">${t.e}</div>
+      <h1 style="text-align:center">${eun(t.n)}<br><span style="color:var(--green)">${esc(r.place)}</span>에 있어요</h1>
+      <p class="hint">${whenTxt(r.t)}에 적어 두셨어요</p>
+      ${r.photo?`<img class="photo" src="${r.photo}" alt="둔 곳 사진">`:''}
+      <button class="big-btn" id="ch">다른 곳에 뒀어요</button>
+      <button class="sub-btn" id="bk">목록으로</button>
+    </div>`);
+  speak(`${eun(t.n)} ${r.place}에 있어요`);
+  $('#ch').onclick=()=>{tick();thingPick(k)};
+  $('#bk').onclick=()=>{tick();things()};
+}
+function thingPick(k){
+  const t=THINGS.find(x=>x.k===k);
+  let photo=(S.things[k]||{}).photo||null;
+  view(`${top(t.n,'',true)}
+    <h1>${t.e} ${eul(t.n)} 어디에 두셨어요?</h1>
+    <div class="placegrid">${HOME_PLACES.map(p=>`<button data-p="${p}">${p}</button>`).join('')}</div>
+    <div class="card">
+      <label class="lbl" for="own">직접 쓰기</label>
+      <input class="name" id="own" maxlength="20" placeholder="예: 작은방 장롱 위">
+      <button class="big-btn" id="sv" style="margin-bottom:0">이 자리로 적기</button>
+    </div>
+    <label class="filebtn">📷 둔 곳 사진도 찍어 두기<input type="file" accept="image/*" capture="environment" id="ph"></label>
+    <p class="hint" id="phmsg" style="margin-top:6px">${photo?'사진이 저장되어 있어요':''}</p>`);
+  speak(`${eul(t.n)} 어디에 두셨어요?`);
+  const store=place=>{
+    S.things[k]={place,t:Date.now(),photo};
+    if(!save()){S.things[k].photo=null;save()}
+    good();thingDetail(k);
+  };
+  $$('.placegrid button').forEach(b=>b.onclick=()=>store(b.dataset.p));
+  $('#sv').onclick=()=>{const v=$('#own').value.trim();if(v)store(v);else $('#own').focus()};
+  $('#ph').onchange=e=>{
+    const f=e.target.files&&e.target.files[0];if(!f)return;
+    const msg=$('#phmsg');msg.textContent='사진을 줄이는 중…';
+    const url=URL.createObjectURL(f),img=new Image();
+    img.onload=()=>{
+      try{
+        const s=Math.min(1,420/Math.max(img.width,img.height));
+        const c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        photo=c.toDataURL('image/jpeg',.6);msg.textContent='사진을 담았어요. 이제 위에서 둔 곳을 눌러 주세요 👆';tick();
+      }catch(err){msg.textContent='사진을 담지 못했어요'}
+      URL.revokeObjectURL(url);
+    };
+    img.onerror=()=>{msg.textContent='사진을 열지 못했어요'};
+    img.src=url;
+  };
+}
+
+/* =========================================================
+   기록
+   ========================================================= */
+function stageTxt(p){return p?'2단계 (바깥까지 보기)':'1단계 (가운데 보기)'}
+function summaryText(){
+  const d=new Date();let wk=0;
+  for(let i=0;i<7;i++){const x=new Date(d);x.setDate(d.getDate()-i);if((S.days[keyOf(x)]||{}).s)wk++}
+  const total=Object.keys(S.days).filter(k=>S.days[k].s).length;
+  const L=S.lv,c=lastCheck();
+  let s=`[매일 두뇌 산책] ${S.name} 기록 (${d.getMonth()+1}/${d.getDate()})
+이번 주: 7일 중 ${wk}일 산책
+지금까지: 모두 ${total}일
+빨리 보기: ${stageTxt(L.speed.periph)}, ${(L.speed.dur/1000).toFixed(1)}초
+물건 자리 기억: ${L.place.k}개 / 장보기 기억: ${L.shop.k}개`;
+  if(c){
+    s+=`\n\n최근 두뇌 체크 (${c.date})\n유형: ${DOMAINS[c.type].type}\n`+Object.keys(DOMAINS).map(k=>`${DOMAINS[k].n}: ${stars(c.scores[k])}`).join('\n');
+  }
+  return s;
+}
+function records(){
+  RUN++;hush();
+  const L=S.lv,f=S.first;
+  const total=Object.keys(S.days).filter(k=>S.days[k].s).length;
+  const chk=S.checks.slice(-6).reverse();
+  view(`${top('나의 기록','',true)}
+    <h1>${esc(S.name)}의 기록 📒</h1>
+    <div class="card">
+      <div class="stat"><span>산책한 날</span><b>모두 ${total}일</b></div>
+      <div class="stat"><span>👀 빨리 보기</span><b>${stageTxt(L.speed.periph)}<br>${(L.speed.dur/1000).toFixed(1)}초</b></div>
+      ${f?`<div class="stat"><span style="color:var(--soft)">처음 시작할 때</span><b style="color:var(--soft)">${stageTxt(f.periph)}<br>${(f.dur/1000).toFixed(1)}초</b></div>`:''}
+      <div class="stat"><span>👛 물건 자리</span><b>${L.place.k}개 기억</b></div>
+      <div class="stat"><span>🛒 장보기</span><b>${L.shop.k}개 기억</b></div>
+      <div class="stat"><span>📞 이야기</span><b>질문 ${L.story.q}개</b></div>
+      <div class="stat"><span>🃏 짝 맞추기</span><b>카드 ${L.cards.pairs}쌍</b></div>
+      <div class="stat"><span>🔢 순서대로</span><b>1부터 ${L.order.n}까지</b></div>
+    </div>
+    <p class="hint">빨리 보기는 그림을 보여 주는 시간이 짧을수록 잘하시는 거예요.</p>
+    <div class="card">
+      <h2>🧭 두뇌 체크 기록</h2>
+      ${chk.length?chk.map(c=>`<div class="stat"><span>${md(fromKey(c.date))}<br><span class="small">${DOMAINS[c.type].type}</span></span><span class="stars">${stars(c.total)}</span></div>`).join(''):'<p class="small">아직 두뇌 체크를 안 하셨어요</p>'}
+    </div>
+    <button class="big-btn" id="cp">💌 가족에게 기록 보내기</button>
+    <p class="hint" id="cpmsg">누르면 기록이 복사돼요. 카톡에 붙여 넣어 보내 주세요.</p>
+    <div class="copybox">${esc(summaryText())}</div>
+    <button class="sub-btn" style="margin-top:16px" data-a="home">처음 화면으로</button>`);
+  $('#cp').onclick=async()=>{
+    const m=$('#cpmsg');
+    try{await navigator.clipboard.writeText(summaryText());m.textContent='복사했어요! 카톡 대화방에 길게 눌러 붙여 넣으세요.';good()}
+    catch(e){m.textContent='복사가 안 됐어요. 아래 글을 길게 눌러 복사해 주세요.'}
+  };
+}
+
+/* =========================================================
+   설정
+   ========================================================= */
+function settings(){
+  RUN++;hush();
+  let armed=false;
+  view(`${top('설정','',true)}
+    <h1>설정 ⚙️</h1>
+    <div class="card">
+      <label class="lbl" for="nm">부르는 이름</label>
+      <input class="name" id="nm" maxlength="12" value="${esc(S.name)}">
+    </div>
+    <div class="card">
+      <label class="lbl">글씨 크기</label>
+      <div class="seg" id="fs"><button data-v="1">보통</button><button data-v="1.15">크게</button><button data-v="1.3">아주 크게</button></div>
+    </div>
+    <div class="card">
+      <label class="lbl">목소리 안내</label>
+      <div class="seg" id="vo"><button data-v="1">켜기</button><button data-v="0">끄기</button></div>
+      <label class="lbl" style="margin-top:14px">효과음</label>
+      <div class="seg" id="so"><button data-v="1">켜기</button><button data-v="0">끄기</button></div>
+    </div>
+    ${NATIVE?`<div class="card mint">
+      <h2>🔔 매일 알림</h2>
+      <div class="seg" id="al"><button data-v="1">켜기</button><button data-v="0">끄기</button></div>
+      <label class="lbl" style="margin-top:14px">아침 알림</label>
+      <div class="seg" id="am"><button data-v="8">8시</button><button data-v="9">9시</button><button data-v="10">10시</button><button data-v="11">11시</button></div>
+      <label class="lbl" style="margin-top:14px">저녁 알림</label>
+      <div class="seg" id="pm"><button data-v="18">6시</button><button data-v="19">7시</button><button data-v="20">8시</button><button data-v="21">9시</button></div>
+      <p class="small" id="almsg">두뇌 체크 날에도 알려 드려요.</p>
+      <p class="small">알림이 늦게 오면: 휴대폰 <b>설정 → 애플리케이션 → 두뇌 산책 → 배터리 → 제한 없음</b>으로 바꿔 주세요.</p>
+    </div>`:`<div class="card mint">
+      <h2>⏰ 매일 알람 맞추기</h2>
+      <p class="small" style="margin-top:0">이 앱은 스스로 알람을 울리지 못해요. 휴대폰 <b>시계</b> 앱에 알람을 맞춰 두면 잊지 않고 하실 수 있어요.</p>
+      <ol class="steps">
+        <li>시계 앱 → 알람 → ＋</li>
+        <li>오전 10시, 이름: <b>두뇌 산책</b></li>
+        <li>한 번 더 ＋ → 저녁 7시</li>
+        <li>요일은 매일 반복</li>
+      </ol>
+      <p class="small">두뇌 체크는 4주마다 처음 화면에서 알려 드려요.</p>
+    </div>`}
+    <div class="card">
+      <button class="danger" id="rs">기록 처음부터 다시 하기</button>
+    </div>
+    <button class="big-btn" data-a="home">저장하고 돌아가기</button>`);
+  const nm=$('#nm');
+  nm.oninput=()=>{S.name=nm.value.trim()||'할머니';save()};nm.onchange=()=>setupAlarms(false);
+  const seg=(id,get,set)=>{
+    const box=$(id);
+    const paint=()=>box.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===String(get())));
+    box.querySelectorAll('button').forEach(b=>b.onclick=()=>{set(b.dataset.v);save();paint();tick()});
+    paint();
+  };
+  seg('#fs',()=>S.fs,v=>{S.fs=+v;applyFont()});
+  seg('#vo',()=>S.voice?1:0,v=>{S.voice=v==='1';if(S.voice)speak('목소리 안내를 켰어요')});
+  seg('#so',()=>S.sound?1:0,v=>{S.sound=v==='1'});
+  if(NATIVE){
+    const re=async()=>{const ok=await setupAlarms(true);S.alarm.asked=true;save();const m=$('#almsg');if(m)m.textContent=ok?(S.alarm.on?`매일 오전 ${S.alarm.am}시, 저녁 ${S.alarm.pm-12}시에 알려 드려요.`:'알림을 껐어요.'):'알림 권한이 꺼져 있어요. 휴대폰 설정에서 알림을 허용해 주세요.'};
+    seg('#al',()=>S.alarm.on?1:0,v=>{S.alarm.on=v==='1';re()});
+    seg('#am',()=>S.alarm.am,v=>{S.alarm.am=+v;re()});
+    seg('#pm',()=>S.alarm.pm,v=>{S.alarm.pm=+v;re()});
+  }
+  const rs=$('#rs');
+  rs.onclick=()=>{
+    if(!armed){armed=true;rs.textContent='정말 지울까요? 한 번 더 누르세요';return}
+    const keep={name:S.name,fs:S.fs,voice:S.voice,sound:S.sound,things:S.things,alarm:S.alarm};
+    S=Object.assign(clone(DEF),keep);save();rs.textContent='기록을 지웠어요';
+  };
+}
+
+
+/* =========================================================
+   연구 근거
+   ========================================================= */
+const REFS=[
+ {h:'👀 빨리 보기',t:'65세 이상 2,802명을 무작위로 나눠 20년 동안 추적한 ACTIVE 연구예요. 처리속도 훈련에 보충 훈련까지 받은 그룹은 대조군보다 치매 진단이 25% 적었어요.',
+  r:'Impact of cognitive training on claims-based diagnosed dementia over 20 years: evidence from the ACTIVE study. Alzheimer\'s & Dementia: TRCI, 2026',u:'https://doi.org/10.1002/trc2.70197'},
+ {h:'🃏 짝 맞추기 · 🔢 순서대로 누르기',t:'경도인지장애가 있는 분들의 컴퓨터 인지훈련 연구를 모은 분석이에요. 전반적인 인지 기능이 작지만 의미 있게 좋아졌어요. 다만 근거의 질은 아직 낮은 편이에요.',
+  r:'Gates NJ 외. Computerised cognitive training for preventing dementia in people with MCI. Cochrane Database Syst Rev, 2019 / Li R 외. J Med Internet Res, 2022',u:'https://doi.org/10.2196/38624'},
+ {h:'📞 이야기 기억',t:'간격을 두고 다시 떠올리게 하는 방법(spaced retrieval)을 치매 환자에게 쓴 연구 34편을 정리한 리뷰예요. 새로운 정보를 익히고, 같은 질문 반복 같은 행동 문제를 줄이는 데 쓰여 왔어요.',
+  r:'A literature review of spaced-retrieval interventions in dementia. International Psychogeriatrics, 2013',u:'https://doi.org/10.1017/S1041610213001233'},
+ {h:'🛒 장보기 기억',t:'건강한 노인과 경도인지장애가 있는 분의 기억 훈련 연구를 모은 코크란 리뷰예요. 바로 떠올리기와 조금 뒤에 떠올리기 모두 좋아졌어요. 다만 다른 활동을 한 비교군보다 확실히 낫지는 않았어요.',
+  r:'Martin M, Clare L 외. Cognition-based interventions for healthy older people and people with MCI. Cochrane Database Syst Rev, 2011',u:'https://doi.org/10.1002/14651858.CD006220.pub2'},
+ {h:'🧮 장보기 계산',t:'간단한 계산과 소리 내어 읽기를 매일 15~20분 하는 일본의 학습요법이에요. 무작위 대조시험에서 치매가 있는 분과 지역사회 노인 모두 인지 기능이 좋아졌어요.',
+  r:'Kawashima R. Mental exercises for cognitive function: clinical evidence. J Prev Med Public Health, 2013',u:'https://pmc.ncbi.nlm.nih.gov/articles/PMC3567314'},
+ {h:'📅 오늘 알기',t:'무작위 대조시험 11편을 모은 분석이에요. 현실 인식 훈련을 600분 넘게 했을 때 치매가 있는 분의 인지 기능이 중간 정도로 좋아졌어요. 다만 이것만으로는 효과가 약하다는 리뷰도 있어서, 다른 놀이와 함께 하도록 넣었어요.',
+  r:'Chiu HY 외. International Journal of Nursing Studies, 2018 / Carrion C 외. Dement Geriatr Cogn Disord, 2018',u:'https://doi.org/10.1159/000490851'},
+ {h:'👛 물건 자리 도우미',t:'메모·달력 같은 외부 기억 도구를 쓰면 "해야 할 일을 기억하는 힘"을 돕는 효과가 컸어요(효과 크기 0.8). 경도인지장애에는 생활에 필요한 정보를 직접 익히고 보완 도구를 쓰는 방법이 잘 맞는다는 리뷰도 있어요.',
+  r:'Preserving prospective memory in daily life: a systematic review and meta-analysis. Neuropsychology, 2021',u:'https://pubmed.ncbi.nlm.nih.gov/33393806/'},
+ {h:'🌸 하루 두 번 · 꾸준히',t:'인지자극치료는 주 1회보다 주 2회 이상 할 때 효과가 더 컸어요. 미국 POINTER 연구에서도 혼자 하는 것보다 구조와 책임감이 있는 프로그램의 효과가 더 컸어요.',
+  r:'Woods B 외. Cochrane Database Syst Rev, 2023 (CD005562) / U.S. POINTER, JAMA, 2025',u:'https://doi.org/10.1002/14651858.CD005562.pub3'},
+ {h:'🧭 두뇌 체크',t:'이 체크는 여러 선별검사에서 보는 영역(날짜 감각, 기억, 주의력, 계산 등)을 본떠 만든 놀이형 확인이에요. 정식으로 검증된 검사가 아니에요. 정확한 검사는 치매안심센터에서 만 60세 이상이면 무료로 받을 수 있어요.',
+  r:'보건복지부·중앙치매센터 치매안심센터 선별검사 안내',u:''}
+];
+function evidence(){
+  RUN++;hush();
+  view(`${top('연구 근거','',true)}
+    <h1>이 앱의 연구 근거 📖</h1>
+    <p class="small">놀이마다 해외 연구를 바탕으로 만들었어요. 다만 이 앱 자체를 시험한 연구는 아니에요.</p>
+    ${REFS.map(x=>`<div class="card"><h2>${x.h}</h2><p class="desc" style="margin:0;font-size:.9em">${x.t}</p><p class="ref">${esc(x.r)}${x.u?`<br><a href="${x.u}" target="_blank" rel="noopener">논문 보기 ↗</a>`:''}</p></div>`).join('')}
+    <button class="sub-btn" style="margin-top:12px" data-a="home">처음 화면으로</button>`);
+}
+/* =========================================================
+   연결
+   ========================================================= */
+const ACTIONS={alarmOn:turnOnAlarms,evidence,home,start:startSession,records,settings,check:startCheck,checkResult:()=>checkResult(false),things};
+app.addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]');
+  if(b&&ACTIONS[b.dataset.a]){tick();ACTIONS[b.dataset.a]()}
+});
+window.__bw={play:k=>{RUN++;GAMES[k].run(r=>result(r));},S:()=>S};
+SES={list:[{k:'speed'}],i:0};
+applyFont();
+home();
+if(NATIVE){
+  if(S.alarm.asked)setupAlarms(false);
+  try{PL.App&&PL.App.addListener('backButton',()=>{if(ON_HOME){PL.App.minimizeApp&&PL.App.minimizeApp()}else home()})}catch(e){}
+  try{PL.App&&PL.App.addListener('resume',()=>{if(ON_HOME)home()})}catch(e){}
+}
+})();
+</script>
+</body>
+</html>

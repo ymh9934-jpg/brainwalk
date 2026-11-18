@@ -1,0 +1,18 @@
+{
+  "appId": "kr.brainwalk.app",
+  "appName": "두뇌 산책",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#FFF7EC"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_walk",
+      "iconColor": "#2F6E50"
+    },
+    "SplashScreen": {
+      "launchShowDuration": 800,
+      "backgroundColor": "#FFF7EC"
+    }
+  }
+}

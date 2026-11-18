@@ -1,0 +1,52 @@
+name: 앱 만들기 (APK)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - name: 패키지 설치
+        run: npm ci
+
+      - name: 웹 화면을 안드로이드 프로젝트로 복사
+        run: npx cap sync android
+
+      - name: APK 빌드
+        working-directory: android
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: 릴리스에 올리기
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk brainwalk.apk
+          gh release create "v1.0.${{ github.run_number }}" brainwalk.apk \
+            --target "${{ github.sha }}" \
+            --title "두뇌 산책 1.0.${{ github.run_number }}" \
+            --notes "할머니 폰에서 brainwalk.apk 를 눌러 내려받고 설치하세요." \
+            --latest
