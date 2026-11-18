@@ -152,6 +152,27 @@ input.name{font:inherit;font-size:1.05em;padding:.4em .6em;border:3px solid var(
 .ref{font-size:.72em;color:var(--soft);font-weight:700;margin:.5em 0 0;line-height:1.5}
 .ref a{color:var(--green)}
 .linkbtn{border:none;background:none;color:var(--green);font-weight:800;font-size:.9em;padding:.6em;margin:6px auto 0;display:block}
+.code{font-size:2em;font-weight:900;letter-spacing:.12em;text-align:center;background:var(--cream);border-radius:16px;padding:.3em 0;color:var(--green)}
+input.codein{font:inherit;font-size:1.6em;font-weight:900;letter-spacing:.12em;text-align:center;text-transform:uppercase;padding:.4em;border:3px solid var(--line);border-radius:16px;width:100%;background:#fff;color:var(--ink)}
+.role{display:flex;align-items:center;gap:16px;width:100%;text-align:left;background:#fff;border:3px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 5px 0 var(--line);margin:12px 0;font-size:1.05em}
+.role .ti{font-size:2.6em;line-height:1}
+.role b{display:block;font-size:1.1em}
+.role span.s{display:block;font-size:.8em;color:var(--soft);font-weight:700}
+.fhead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.refresh{border:none;background:#EFE3D3;border-radius:14px;padding:.45em .7em;font-weight:800;font-size:.8em;white-space:nowrap}
+.alert{background:#FFF1E8;border-color:#F2C2A6}
+.game{padding:10px 0;border-bottom:2px dashed var(--line)}
+.game:last-child{border-bottom:none}
+.game .gt{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-weight:800}
+.game .gt span{font-size:.78em;color:var(--soft)}
+.spark{display:flex;align-items:flex-end;gap:2px;height:52px;margin-top:8px;border-bottom:1px solid #D9C9B3}
+.spark button{flex:0 0 calc((100% - 22px) / 12);height:100%;display:flex;align-items:flex-end;border:none;background:none;padding:0}
+.spark button i{display:block;width:100%;background:var(--green2);border-radius:4px 4px 0 0;min-height:3px}
+.spark button.on i{background:var(--green-d)}
+.cap{font-size:.75em;color:var(--soft);font-weight:700;min-height:1.4em;margin-top:4px}
+.tbl{width:100%;border-collapse:collapse;font-size:.75em;margin-top:6px}
+.tbl td{padding:3px 4px;border-bottom:1px solid var(--line);color:var(--ink)}
+.tbl td:last-child{color:var(--soft)}
 .steps{margin:.3em 0 0;padding-left:1.2em;font-weight:700;line-height:1.7}
 </style>
 </head>
@@ -232,9 +253,15 @@ const WEEK={0:['today','money'],1:['place','cards'],2:['story','order'],3:['shop
 const CHECK_EVERY=28;
 
 const KEY='brainwalk-v1';
+/* 가족 연동 서버 주소 (구글 Apps Script 웹 앱) */
+const SYNC_URL_BUILTIN='';
+function syncUrl(){try{return localStorage.getItem('bw-sync-url')||SYNC_URL_BUILTIN}catch(e){return SYNC_URL_BUILTIN}}
 const DEF={name:'할머니',fs:1,voice:true,sound:true,
   lv:{speed:{dur:1600,periph:false},cards:{pairs:3},order:{n:5},place:{k:2},story:{q:2},shop:{k:3},money:{lv:1},today:{clk:1}},
-  first:null,days:{},checks:[],things:{},alarm:{on:true,am:10,pm:19,asked:false}};
+  first:null,days:{},checks:[],things:{},alarm:{on:true,am:10,pm:19,asked:false},
+  role:null,hist:[],lastOpen:0,
+  link:{on:false,code:null,token:null,lastSync:0,pending:false},
+  fam:{code:null,data:null,fetched:0,remind:true,hour:20,asked:false}};
 const clone=o=>JSON.parse(JSON.stringify(o));
 function load(){
   try{
@@ -242,7 +269,10 @@ function load(){
     if(raw){
       const o=JSON.parse(raw),d=clone(DEF),lv={};
       for(const k in d.lv)lv[k]=Object.assign(d.lv[k],(o.lv||{})[k]||{});
-      return Object.assign(d,o,{lv,days:o.days||{},checks:o.checks||[],things:o.things||{},alarm:Object.assign(d.alarm,o.alarm||{})});
+      const r=Object.assign(d,o,{lv,days:o.days||{},checks:o.checks||[],things:o.things||{},alarm:Object.assign(d.alarm,o.alarm||{}),
+        hist:o.hist||[],link:Object.assign(d.link,o.link||{}),fam:Object.assign(d.fam,o.fam||{})});
+      if(!r.role&&(Object.keys(r.days).length||r.checks.length))r.role='grandma';
+      return r;
     }
   }catch(e){}
   return clone(DEF);
@@ -375,6 +405,43 @@ async function turnOnAlarms(){
 }
 
 /* =========================================================
+   가족 연동 (구글 시트)
+   ========================================================= */
+async function api(method,payload){
+  const url=syncUrl();if(!url)throw new Error('no_url');
+  let res;
+  if(method==='GET'){res=await fetch(url+(url.includes('?')?'&':'?')+new URLSearchParams(payload).toString())}
+  else{res=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})}
+  if(!res.ok)throw new Error('http_'+res.status);
+  return res.json();
+}
+function snapshot(){
+  const days={},keys=Object.keys(S.days).sort().slice(-180);
+  keys.forEach(k=>days[k]=S.days[k]);
+  const things={};for(const k in S.things){const t=S.things[k];things[k]={place:t.place,t:t.t}}
+  return {v:3,name:S.name,lastOpen:S.lastOpen,lastSession:S.lastSession||0,days,hist:S.hist.slice(-300),
+    checks:S.checks,lv:S.lv,first:S.first,things,alarm:{on:S.alarm.on,am:S.alarm.am,pm:S.alarm.pm,asked:S.alarm.asked}};
+}
+let syncing=false;
+async function trySync(){
+  if(syncing||!S.link.on||!S.link.token||!syncUrl())return false;
+  syncing=true;
+  try{
+    const r=await api('POST',{action:'sync',code:S.link.code,token:S.link.token,snapshot:snapshot()});
+    if(r&&r.ok){S.link.pending=false;S.link.lastSync=Date.now();save();return true}
+    return false;
+  }catch(e){return false}
+  finally{syncing=false}
+}
+function queueSync(){if(!S.link.on)return;S.link.pending=true;save();trySync()}
+async function linkFamily(){
+  const r=await api('POST',{action:'register',name:S.name});
+  if(!r||!r.ok)throw new Error('register');
+  S.link={on:true,code:r.code,token:r.token,lastSync:0,pending:true};save();
+  await trySync();
+}
+
+/* =========================================================
    홈
    ========================================================= */
 function lastCheck(){return S.checks.length?S.checks[S.checks.length-1]:null}
@@ -395,7 +462,10 @@ function lineup(d){
 }
 let ON_HOME=false;
 function home(){
+  if(NATIVE&&!S.role)return roleSelect();
+  if(S.role==='family')return famHome();
   RUN++;hush();ON_HOME=true;
+  if(Date.now()-S.lastOpen>3600000){S.lastOpen=Date.now();save();if(S.link.on)queueSync()}
   const d=new Date(),h=d.getHours();
   const hi=h<11?'좋은 아침이에요':h<17?'좋은 오후예요':'편안한 저녁이에요';
   const c=todayCount(),lu=lineup(d);
@@ -457,7 +527,7 @@ function speedGame(done){
   function next(){
     if(t>=N){
       if(up){L.periph=true;L.dur=1800}
-      save();return done({k:'speed',line:`${N}번 중 <b>${correct}번</b> 맞히셨어요`,up});
+      save();return done({k:'speed',line:`${N}번 중 <b>${correct}번</b> 맞히셨어요`,up,score:Math.round(correct/N*100),lvl:`${L.periph?2:1}단계 ${(L.dur/1000).toFixed(1)}초`});
     }
     t++;
     const pool=shuffle(ITEMS.slice()),target=pool[0];
@@ -528,7 +598,7 @@ function cardsGame(done){
         if(moves<=P+2&&P<6){S.lv.cards.pairs=P+1;up=true}
         else if(moves>P*3&&P>2)S.lv.cards.pairs=P-1;
         save();
-        later(()=>done({k:'cards',line:`<b>${moves}번</b> 만에 짝을 다 찾으셨어요`,up}),900);
+        later(()=>done({k:'cards',line:`<b>${moves}번</b> 만에 짝을 다 찾으셨어요`,up,score:Math.min(100,Math.round(P/moves*100)),lvl:`카드 ${P}쌍`}),900);
       }
     }else{
       lock=true;
@@ -558,7 +628,7 @@ function orderGame(done){
         if(err<=1&&time<n*2.2&&n<12){S.lv.order.n=n+1;up=true}
         else if(err>=3&&n>4)S.lv.order.n=n-1;
         save();
-        later(()=>done({k:'order',line:`<b>${Math.round(time)}초</b> 만에 다 누르셨어요`,up}),800);
+        later(()=>done({k:'order',line:`<b>${Math.round(time)}초</b> 만에 다 누르셨어요`,up,score:Math.max(10,Math.min(100,Math.round(100-(time/n-1)*20-err*8))),lvl:`1~${n}`}),800);
       }else{tick();pr.innerHTML=`지금 누를 숫자 <span class="nx">${nx}</span>`}
     }else{
       err++;soft();b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');
@@ -578,10 +648,10 @@ function roomHTML(o){
   }).join('')}</div>`;
 }
 function placeGame(done){
-  const ROUNDS=2;let round=0,tot=0,cor=0,up=false;
+  const ROUNDS=2,k0=S.lv.place.k;let round=0,tot=0,cor=0,up=false;
   const head=()=>top('물건 자리 기억',(round)+' / '+ROUNDS);
   function startRound(){
-    if(round>=ROUNDS){save();return done({k:'place',line:`${tot}개 중 <b>${cor}개</b> 자리를 기억하셨어요`,up})}
+    if(round>=ROUNDS){save();return done({k:'place',line:`${tot}개 중 <b>${cor}개</b> 자리를 기억하셨어요`,up,score:Math.round(cor/tot*100),lvl:`물건 ${k0}개`})}
     round++;
     const k=S.lv.place.k;
     const objs=shuffle(OBJS.slice()).slice(0,k);
@@ -653,7 +723,7 @@ function storyGame(done){
     if(round>=ROUNDS){
       if(cor===tot&&qn<3){S.lv.story.q=3;up=true}
       else if(cor<=tot/2&&qn>2)S.lv.story.q=2;
-      save();return done({k:'story',line:`${tot}문제 중 <b>${cor}문제</b> 기억하셨어요`,up});
+      save();return done({k:'story',line:`${tot}문제 중 <b>${cor}문제</b> 기억하셨어요`,up,score:Math.round(cor/tot*100),lvl:`질문 ${qn}개`});
     }
     const st=STORIES[used[round]];round++;
     view(`${head()}<div class="prompt">잘 듣고 기억해 주세요</div>
@@ -682,10 +752,10 @@ function storyGame(done){
 
 /* 6. 장보기 기억 */
 function shopGame(done){
-  const ROUNDS=2;let round=0,tot=0,hitsAll=0,up=false;
+  const ROUNDS=2,k0=S.lv.shop.k;let round=0,tot=0,hitsAll=0,up=false;
   const head=()=>top('장보기 기억',round+' / '+ROUNDS);
   function startRound(){
-    if(round>=ROUNDS){save();return done({k:'shop',line:`살 것 ${tot}개 중 <b>${hitsAll}개</b>를 기억하셨어요`,up})}
+    if(round>=ROUNDS){save();return done({k:'shop',line:`살 것 ${tot}개 중 <b>${hitsAll}개</b>를 기억하셨어요`,up,score:Math.round(hitsAll/tot*100),lvl:`${k0}개`})}
     round++;
     const k=S.lv.shop.k;
     const pool=shuffle(GOODS.slice()),list=pool.slice(0,k);
@@ -749,13 +819,13 @@ function moneyQ(lv){
   return {q:`${x.e} ${x.n} ${won(a)}, ${y.e} ${y.n} ${won(b)}을 사고<br>💵 10,000원을 냈어요<br><b>거스름돈은 얼마일까요?</b>`,a:10000-a-b,d:[100,-100,1000,-1000]};
 }
 function moneyGame(done){
-  const L=S.lv.money,N=5;let t=0,cor=0;
+  const L=S.lv.money,N=5,lv0=L.lv;let t=0,cor=0;
   const head=()=>top('장보기 계산',t+' / '+N);
   function next(){
     if(t>=N){
       let up=false;
       if(cor>=4&&L.lv<3){L.lv++;up=true}else if(cor<=2&&L.lv>1)L.lv--;
-      save();return done({k:'money',line:`${N}문제 중 <b>${cor}문제</b> 맞히셨어요`,up});
+      save();return done({k:'money',line:`${N}문제 중 <b>${cor}문제</b> 맞히셨어요`,up,score:Math.round(cor/N*100),lvl:`${lv0}단계`});
     }
     t++;
     const q=moneyQ(L.lv);
@@ -803,7 +873,7 @@ function todayGame(done){
       const s=`오늘은 ${d.getFullYear()}년 ${md(d)} ${WD[d.getDay()]}요일, ${ieyo(season(d.getMonth()+1))}`;
       view(`${head()}<div class="center-col"><div class="icon-big">📅</div><div class="card desc" style="text-align:center">${s}</div><button class="big-btn" id="nx">다음 ▶</button></div>`);
       speak(s);
-      $('#nx').onclick=()=>done({k:'today',line:`${N}문제 중 <b>${cor}문제</b> 맞히셨어요`,up});
+      $('#nx').onclick=()=>done({k:'today',line:`${N}문제 중 <b>${cor}문제</b> 맞히셨어요`,up,score:Math.round(cor/N*100),lvl:`시계 ${L.clk}단계`});
       return;
     }
     const q=qs[t]();t++;
@@ -852,6 +922,11 @@ function intro(){
   $('#go').onclick=()=>{hush();tick();g.run(r=>result(r))};
 }
 function result(r){
+  if(typeof r.score==='number'){
+    S.hist.push({d:keyOf(new Date()),t:Date.now(),k:r.k,s:r.score,l:r.lvl||''});
+    if(S.hist.length>400)S.hist=S.hist.slice(-400);
+    save();
+  }
   const last=SES.i===SES.list.length-1;
   const praise=pick(['참 잘하셨어요!','훌륭하세요!','멋지세요!','정말 잘하시네요!']);
   view(`<div class="center-col" style="flex:1;justify-content:center">
@@ -867,7 +942,8 @@ function result(r){
 function finishSession(){
   const k=keyOf(new Date()),prev=S.days[k]||{};
   S.days[k]={s:(prev.s||0)+1,dur:S.lv.speed.dur,periph:S.lv.speed.periph};
-  save();
+  S.lastSession=Date.now();
+  save();queueSync();
   const c=S.days[k].s;
   const sub=c===1?'오늘 한 번 하셨어요. 저녁에 한 번 더 하면 더 좋아요.':c===2?'오늘 두 번 다 하셨어요! 내일은 다른 놀이로 만나요.':`오늘 벌써 ${c}번째예요! 대단하세요.`;
   view(`<div class="center-col" style="flex:1;justify-content:center">
@@ -1050,7 +1126,7 @@ function ckFinish(){
   const prev=lastCheck();
   S.checks.push({date:keyOf(new Date()),scores:sc,total,type:best,prevTotal:prev?prev.total:null});
   save();good();
-  setupAlarms(false);
+  setupAlarms(false);queueSync();
   checkResult(true);
 }
 function checkResult(fresh){
@@ -1140,7 +1216,7 @@ function thingPick(k){
   const store=place=>{
     S.things[k]={place,t:Date.now(),photo};
     if(!save()){S.things[k].photo=null;save()}
-    good();thingDetail(k);
+    queueSync();good();thingDetail(k);
   };
   $$('.placegrid button').forEach(b=>b.onclick=()=>store(b.dataset.p));
   $('#sv').onclick=()=>{const v=$('#own').value.trim();if(v)store(v);else $('#own').focus()};
@@ -1217,6 +1293,31 @@ function records(){
 /* =========================================================
    설정
    ========================================================= */
+function paintLink(){
+  const box=$('#linkbox');if(!box)return;
+  if(!syncUrl()){box.innerHTML='<p class="small" style="margin:0">아직 연동 서버가 설정되지 않았어요.</p>';return}
+  if(!S.link.on){
+    box.innerHTML=`<p class="small" style="margin-top:0">연결하면 놀이 기록이 가족 휴대폰으로 전해져요. 가족은 '두뇌 산책' 앱을 깔고 가족 코드만 넣으면 돼요.</p>
+      <button class="big-btn" id="lk" style="margin-bottom:0">가족과 연결하기</button><p class="small" id="lkmsg"></p>`;
+    $('#lk').onclick=async()=>{
+      const b=$('#lk'),m=$('#lkmsg');b.disabled=true;m.textContent='연결하는 중…';
+      try{await linkFamily();good();paintLink()}
+      catch(e){b.disabled=false;m.textContent='연결하지 못했어요. 인터넷이 켜져 있는지 확인해 주세요.'}
+    };
+    return;
+  }
+  const ls=S.link.lastSync?whenTxt(S.link.lastSync):'아직 안 보냈어요';
+  box.innerHTML=`<p class="small" style="margin-top:0">가족 코드</p>
+    <div class="code">${esc(S.link.code)}</div>
+    <p class="small">가족 휴대폰의 '두뇌 산책' 앱에서 '가족이 기록을 볼 거예요'를 고르고 이 코드를 넣으면 돼요.</p>
+    <div class="row"><button class="sub-btn" id="cpc">코드 복사</button><button class="sub-btn" id="snd">지금 보내기</button></div>
+    <p class="small" id="lkmsg">마지막으로 보낸 때: ${ls}${S.link.pending?' (보낼 기록 있음)':''}</p>
+    <button class="linkbtn" id="unl">연결 끊기</button>`;
+  $('#cpc').onclick=async()=>{const m=$('#lkmsg');try{await navigator.clipboard.writeText(`[두뇌 산책] 가족 코드: ${S.link.code}\n'두뇌 산책' 앱 → 가족이 기록을 볼 거예요 → 코드 입력`);m.textContent='복사했어요! 카톡에 붙여 넣어 가족에게 보내 주세요.';tick()}catch(e){m.textContent='복사가 안 됐어요. 코드를 직접 적어 보내 주세요.'}};
+  $('#snd').onclick=async()=>{const m=$('#lkmsg');m.textContent='보내는 중…';S.link.pending=true;const ok=await trySync();m.textContent=ok?'보냈어요! 가족이 바로 볼 수 있어요.':'보내지 못했어요. 인터넷을 확인해 주세요.';if(ok)good()};
+  let ua=false;const u=$('#unl');
+  u.onclick=()=>{if(!ua){ua=true;u.textContent='정말 끊을까요? 한 번 더 누르세요';return}S.link={on:false,code:null,token:null,lastSync:0,pending:false};save();paintLink()};
+}
 function settings(){
   RUN++;hush();
   let armed=false;
@@ -1257,11 +1358,16 @@ function settings(){
       <p class="small">두뇌 체크는 4주마다 처음 화면에서 알려 드려요.</p>
     </div>`}
     <div class="card">
+      <h2>👨‍👩‍👧 가족과 연결</h2>
+      <div id="linkbox"></div>
+    </div>
+    <div class="card">
       <button class="danger" id="rs">기록 처음부터 다시 하기</button>
     </div>
+    ${NATIVE?'<button class="linkbtn" id="tofam">이 휴대폰을 가족용(기록 보기)으로 바꾸기</button>':''}
     <button class="big-btn" data-a="home">저장하고 돌아가기</button>`);
   const nm=$('#nm');
-  nm.oninput=()=>{S.name=nm.value.trim()||'할머니';save()};nm.onchange=()=>setupAlarms(false);
+  nm.oninput=()=>{S.name=nm.value.trim()||'할머니';save()};nm.onchange=()=>{setupAlarms(false);queueSync()};
   const seg=(id,get,set)=>{
     const box=$(id);
     const paint=()=>box.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===String(get())));
@@ -1277,10 +1383,13 @@ function settings(){
     seg('#am',()=>S.alarm.am,v=>{S.alarm.am=+v;re()});
     seg('#pm',()=>S.alarm.pm,v=>{S.alarm.pm=+v;re()});
   }
+  paintLink();
+  const tf=$('#tofam');let tfArmed=false;
+  if(tf)tf.onclick=()=>{if(!tfArmed){tfArmed=true;tf.textContent='정말 바꿀까요? 한 번 더 누르세요';return}S.role='family';save();home()};
   const rs=$('#rs');
   rs.onclick=()=>{
     if(!armed){armed=true;rs.textContent='정말 지울까요? 한 번 더 누르세요';return}
-    const keep={name:S.name,fs:S.fs,voice:S.voice,sound:S.sound,things:S.things,alarm:S.alarm};
+    const keep={name:S.name,fs:S.fs,voice:S.voice,sound:S.sound,things:S.things,alarm:S.alarm,role:S.role,link:S.link};
     S=Object.assign(clone(DEF),keep);save();rs.textContent='기록을 지웠어요';
   };
 }
@@ -1317,10 +1426,194 @@ function evidence(){
     ${REFS.map(x=>`<div class="card"><h2>${x.h}</h2><p class="desc" style="margin:0;font-size:.9em">${x.t}</p><p class="ref">${esc(x.r)}${x.u?`<br><a href="${x.u}" target="_blank" rel="noopener">논문 보기 ↗</a>`:''}</p></div>`).join('')}
     <button class="sub-btn" style="margin-top:12px" data-a="home">처음 화면으로</button>`);
 }
+
+/* =========================================================
+   역할 선택 · 가족 모드
+   ========================================================= */
+function roleSelect(){
+  RUN++;hush();
+  view(`<div class="center-col" style="flex:1;justify-content:center">
+      <div class="icon-big">🌸</div>
+      <h1 style="text-align:center">두뇌 산책</h1>
+      <p class="desc" style="margin-top:0">이 휴대폰은 누가 쓰나요?</p>
+      <button class="role" data-r="grandma"><span class="ti">👵</span><span><b>어르신이 쓰실 거예요</b><span class="s">매일 두뇌 산책 놀이를 해요</span></span></button>
+      <button class="role" data-r="family"><span class="ti">👨‍👩‍👧</span><span><b>가족이 기록을 볼 거예요</b><span class="s">가족 코드로 어르신 기록을 봐요</span></span></button>
+    </div>`);
+  ON_HOME=true;
+  $$('.role').forEach(b=>b.onclick=()=>{tick();S.role=b.dataset.r;save();home()});
+}
+function famJoin(msg){
+  RUN++;hush();
+  view(`${S.fam.code?top('가족 코드','',true):''}
+    <div class="center-col" style="margin-top:20px">
+      <div class="icon-big">🔑</div>
+      <h1 style="text-align:center">가족 코드를 넣어 주세요</h1>
+      <p class="small" style="text-align:center;margin-bottom:12px">어르신 휴대폰의 두뇌 산책 앱 → 설정 → '가족과 연결'에 나오는 8자리 코드예요.</p>
+      <input class="codein" id="cd" maxlength="9" placeholder="ABCD-EFGH" autocomplete="off" autocapitalize="characters">
+      <button class="big-btn" id="ok">기록 보기</button>
+      <p class="small" id="msg" style="text-align:center">${msg||''}</p>
+      ${S.fam.code?'':'<button class="linkbtn" id="back">← 처음 화면으로</button>'}
+    </div>`);
+  ON_HOME=!S.fam.code;
+  const cd=$('#cd');
+  cd.oninput=()=>{let v=cd.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8);cd.value=v.length>4?v.slice(0,4)+'-'+v.slice(4):v};
+  const b=$('#back');if(b)b.onclick=()=>{S.role=null;save();home()};
+  $('#ok').onclick=async()=>{
+    const v=cd.value.replace(/[^A-Z0-9]/g,'');const m=$('#msg');
+    if(v.length!==8){m.textContent='코드 8자리를 모두 넣어 주세요.';return}
+    m.textContent='찾는 중…';
+    try{
+      const r=await api('GET',{action:'summary',code:v});
+      if(!r||!r.ok){m.textContent='그런 코드를 찾지 못했어요. 다시 확인해 주세요.';soft();return}
+      S.fam.code=r.code;S.fam.data=r;S.fam.fetched=Date.now();save();good();famHome();
+    }catch(e){m.textContent=syncUrl()?'연결하지 못했어요. 인터넷을 확인해 주세요.':'아직 연동 서버가 설정되지 않았어요.'}
+  };
+}
+async function famFetch(){
+  if(!S.fam.code)return false;
+  try{
+    const r=await api('GET',{action:'summary',code:S.fam.code});
+    if(r&&r.ok){S.fam.data=r;S.fam.fetched=Date.now();save();return true}
+  }catch(e){}
+  return false;
+}
+function lastSessionDay(d){
+  const ks=Object.keys(d.days||{}).filter(k=>(d.days[k]||{}).s).sort();
+  return ks.length?ks[ks.length-1]:null;
+}
+function famHome(){
+  if(!S.fam.code)return famJoin();
+  RUN++;hush();
+  const r=S.fam.data||{},d=r.snapshot||{};
+  const name=d.name||r.name||'어르신';
+  const now=new Date(),todayK=keyOf(now);
+  const lastK=lastSessionDay(d);
+  const gap=lastK?Math.round((fromKey(todayK)-fromKey(lastK))/86400000):null;
+  const act=Math.max(d.lastSession||0,d.lastOpen||0);
+  let week='',wk=0;
+  for(let i=6;i>=0;i--){
+    const x=new Date(now);x.setDate(now.getDate()-i);
+    const s=((d.days||{})[keyOf(x)]||{}).s||0;if(s)wk++;
+    week+=`<div class="day${i===0?' today':''}"><div class="dot">${s>=2?'🌻':s===1?'🌸':''}</div>${i===0?'오늘':WD[x.getDay()]}</div>`;
+  }
+  const todayN=((d.days||{})[todayK]||{}).s||0;
+  let alert='';
+  if(!d.days)alert=`<div class="card alert"><h2>아직 받은 기록이 없어요</h2><p class="small" style="margin:0">${esc(name)} 휴대폰에서 놀이를 한 번 마치면 여기에 기록이 나타나요.</p></div>`;
+  else if(gap===null||gap>=3)alert=`<div class="card alert"><h2>📞 ${gap===null?'아직 두뇌 산책 기록이 없어요':gap+'일째 두뇌 산책을 안 하셨어요'}</h2><p class="small" style="margin:0">안부 전화 한 번 드려 보세요. 함께 해 보자고 권해 드리면 좋아요.</p></div>`;
+  // 두뇌 체크
+  const chks=d.checks||[],c=chks[chks.length-1];
+  let ck='';
+  if(c){
+    const due=fromKey(c.date);due.setDate(due.getDate()+CHECK_EVERY);
+    const concern=c.scores.memory<=34||c.scores.orient<=67||c.total<60;
+    const prev=chks.length>1?chks[chks.length-2]:null;
+    const cmp=prev?(c.total-prev.total>=5?'지난번보다 좋아졌어요 ⬆️':c.total-prev.total<=-5?'지난번보다 조금 내려갔어요 ⬇️':'지난번과 비슷해요 ➡️'):'';
+    ck=`<div class="card"><h2>🧭 두뇌 체크 · ${md(fromKey(c.date))}</h2>
+      <p class="small" style="margin:0 0 4px">${DOMAINS[c.type].ic} ${DOMAINS[c.type].type}${cmp?' · '+cmp:''}</p>
+      ${Object.keys(DOMAINS).map(k=>`<div class="stat"><span>${DOMAINS[k].ic} ${DOMAINS[k].n}</span><span class="stars">${stars(c.scores[k])}</span></div>`).join('')}
+      <p class="small">다음 체크: ${md(due)}</p>
+      ${concern?`<p class="small" style="color:var(--coral)">기억력 쪽 점수가 낮게 나왔어요. 가까운 치매안심센터(만 60세 이상 무료 선별검사)에 함께 가 보시길 권해요.</p>`:''}
+    </div>`;
+  }else ck=`<div class="card"><h2>🧭 두뇌 체크</h2><p class="small" style="margin:0">아직 두뇌 체크를 안 하셨어요. 어르신 앱 첫 화면의 '첫 두뇌 체크 해 보기'를 함께 해 보세요.</p></div>`;
+  // 놀이별 기록
+  const hist=d.hist||[];
+  const byK={};hist.forEach(x=>{(byK[x.k]=byK[x.k]||[]).push(x)});
+  const order=['speed','place','story','shop','cards','order','money','today'].filter(k=>byK[k]);
+  const games=order.map(k=>{
+    const a=byK[k].slice(-12),g=GAMES[k],last=a[a.length-1];
+    let trend='';
+    const all=byK[k];
+    if(all.length>=6){
+      const m=xs=>xs.reduce((p,q)=>p+q.s,0)/xs.length;
+      const dlt=m(all.slice(-3))-m(all.slice(-6,-3));
+      trend=dlt>=8?' · 좋아지는 중':dlt<=-8?' · 조금 내려감':' · 비슷하게 유지';
+    }
+    return `<div class="game" data-k="${k}"><div class="gt">${g.icon} ${g.title}<span>${esc(last.l)} · 최근 ${last.s}점${trend}</span></div>
+      <div class="spark" role="img" aria-label="${g.title} 최근 ${a.length}번 점수">${a.map((x,i)=>`<button data-i="${i}" aria-label="${md(new Date(x.t))} ${x.s}점"><i style="height:${Math.max(4,x.s)}%"></i></button>`).join('')}</div>
+      <div class="cap">막대를 누르면 날짜와 점수가 보여요</div>
+      <table class="tbl" hidden>${a.slice().reverse().map(x=>`<tr><td>${md(new Date(x.t))}</td><td>${x.s}점</td><td>${esc(x.l)}</td></tr>`).join('')}</table>
+    </div>`;
+  }).join('');
+  // 물건 자리
+  const th=d.things||{};
+  const things=THINGS.filter(t=>th[t.k]).map(t=>`<div class="stat"><span>${t.e} ${t.n}</span><b>${esc(th[t.k].place)}<br><span class="small">${whenTxt(th[t.k].t)}</span></b></div>`).join('');
+  view(`<div class="fhead"><div><div class="date">${md(now)} ${WD[now.getDay()]}요일</div><h1>${esc(name)} 기록 👵</h1></div>
+      <button class="refresh" id="rf">🔄 새로고침</button></div>
+    <p class="small" style="margin-top:0" id="upd">${act?'마지막으로 앱을 쓴 때: '+whenTxt(act):''}${S.fam.fetched?' · 받아 온 때: '+whenTxt(S.fam.fetched):''}</p>
+    ${NATIVE&&!S.fam.asked?`<button class="tool-btn" id="fal" style="background:#F1F8F3;border-color:#C5E0D0;box-shadow:0 4px 0 #C5E0D0"><span class="ti">🔔</span><span><b>매일 저녁 확인 알림 켜기</b><span class="s">저녁 ${S.fam.hour-12}시에 기록 확인하라고 알려 드려요</span></span></button>`:''}
+    ${alert}
+    <div class="card"><h2>이번 주 두뇌 산책 · 7일 중 ${wk}일</h2><div class="week">${week}</div><p class="small">오늘 ${todayN}번 했어요 (하루 목표 2번)</p></div>
+    ${ck}
+    ${games?`<div class="card"><div class="fhead"><h2>놀이별 점수</h2><button class="refresh" id="tb">숫자로 보기</button></div>
+      <p class="small" style="margin:0">최근 12번까지 보여요. 단계가 오르면 점수가 잠깐 내려갈 수 있어요.</p>${games}</div>`:''}
+    ${things?`<div class="card"><h2>👛 물건 둔 곳</h2>${things}</div>`:''}
+    <div class="row" style="margin-top:6px"><button class="sub-btn" data-a="famSettings">⚙️ 설정</button><button class="sub-btn" data-a="evidence">📖 연구 근거</button></div>
+    <p class="note">게임 점수는 컨디션에 따라 오르내려요. 점수보다 꾸준히 하시는지, 생활에서 달라진 점이 있는지를 함께 봐 주세요.</p>`);
+  ON_HOME=true;
+  $$('.game').forEach(gm=>{
+    const a=byK[gm.dataset.k].slice(-12),cap=gm.querySelector('.cap');
+    gm.querySelectorAll('.spark button').forEach(b=>b.onclick=()=>{
+      gm.querySelectorAll('.spark button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+      const x=a[+b.dataset.i];cap.textContent=`${md(new Date(x.t))} · ${x.s}점 · ${x.l}`;
+    });
+  });
+  const tb=$('#tb');if(tb)tb.onclick=()=>{const show=tb.textContent==='숫자로 보기';$$('.tbl').forEach(t=>t.hidden=!show);tb.textContent=show?'막대로 보기':'숫자로 보기'};
+  const fal=$('#fal');if(fal)fal.onclick=async()=>{const ok=await setupFamAlarm(true);S.fam.asked=true;save();famHome();if(ok)good()};
+  $('#rf').onclick=async()=>{const u=$('#upd');u.textContent='받아 오는 중…';const ok=await famFetch();if(ok){good();famHome()}else u.textContent='받아 오지 못했어요. 인터넷을 확인해 주세요.'};
+  if(Date.now()-S.fam.fetched>60000){const my=RUN;famFetch().then(ok=>{if(ok&&my===RUN)famHome()})}
+}
+async function setupFamAlarm(ask){
+  const LN=PL.LocalNotifications;
+  if(!NATIVE||!LN)return false;
+  try{
+    let p=await LN.checkPermissions();
+    if(p.display!=='granted'){if(!ask)return false;p=await LN.requestPermissions();if(p.display!=='granted')return false}
+    try{await LN.createChannel({id:'fam',name:'가족 확인 알림',importance:3,visibility:1})}catch(e){}
+    try{await LN.cancel({notifications:[{id:11}]})}catch(e){}
+    if(S.fam.remind){
+      const nm=((S.fam.data||{}).snapshot||{}).name||'어르신';
+      await LN.schedule({notifications:[{id:11,channelId:'fam',title:`👵 오늘 ${nm} 두뇌 산책 기록`,body:'오늘 기록을 확인하고 안부를 전해 보세요.',schedule:{on:{hour:+S.fam.hour,minute:0},allowWhileIdle:true}}]});
+    }
+    return true;
+  }catch(e){return false}
+}
+function famSettings(){
+  RUN++;hush();
+  view(`${top('설정','',true)}
+    <h1>가족용 설정 ⚙️</h1>
+    <div class="card">
+      <label class="lbl">연결된 가족 코드</label>
+      <div class="code">${esc(S.fam.code||'-')}</div>
+      <button class="sub-btn" id="chg" style="margin-top:12px">다른 코드 넣기</button>
+    </div>
+    ${NATIVE?`<div class="card mint">
+      <h2>🔔 매일 저녁 확인 알림</h2>
+      <div class="seg" id="fr"><button data-v="1">켜기</button><button data-v="0">끄기</button></div>
+      <label class="lbl" style="margin-top:14px">알림 시간</label>
+      <div class="seg" id="fh"><button data-v="19">저녁 7시</button><button data-v="20">8시</button><button data-v="21">9시</button></div>
+      <p class="small" id="fmsg"></p>
+    </div>`:''}
+    <div class="card">
+      <label class="lbl">글씨 크기</label>
+      <div class="seg" id="fs"><button data-v="1">보통</button><button data-v="1.15">크게</button><button data-v="1.3">아주 크게</button></div>
+    </div>
+    <button class="linkbtn" id="tog">이 휴대폰을 어르신용(놀이)으로 바꾸기</button>
+    <button class="big-btn" data-a="home">돌아가기</button>`);
+  $('#chg').onclick=()=>famJoin();
+  const seg=(id,get,set)=>{const box=$(id);if(!box)return;
+    const paint=()=>box.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===String(get())));
+    box.querySelectorAll('button').forEach(b=>b.onclick=()=>{set(b.dataset.v);save();paint();tick()});paint()};
+  seg('#fs',()=>S.fs,v=>{S.fs=+v;applyFont()});
+  const re=async()=>{const ok=await setupFamAlarm(true);S.fam.asked=true;save();const m=$('#fmsg');if(m)m.textContent=ok?(S.fam.remind?`매일 저녁 ${S.fam.hour-12}시에 알려 드려요.`:'알림을 껐어요.'):'알림 권한이 꺼져 있어요. 휴대폰 설정에서 허용해 주세요.'};
+  seg('#fr',()=>S.fam.remind?1:0,v=>{S.fam.remind=v==='1';re()});
+  seg('#fh',()=>S.fam.hour,v=>{S.fam.hour=+v;re()});
+  let ar=false;const tg=$('#tog');
+  tg.onclick=()=>{if(!ar){ar=true;tg.textContent='정말 바꿀까요? 한 번 더 누르세요';return}S.role='grandma';save();home()};
+}
 /* =========================================================
    연결
    ========================================================= */
-const ACTIONS={alarmOn:turnOnAlarms,evidence,home,start:startSession,records,settings,check:startCheck,checkResult:()=>checkResult(false),things};
+const ACTIONS={famSettings,alarmOn:turnOnAlarms,evidence,home,start:startSession,records,settings,check:startCheck,checkResult:()=>checkResult(false),things};
 app.addEventListener('click',e=>{
   const b=e.target.closest('[data-a]');
   if(b&&ACTIONS[b.dataset.a]){tick();ACTIONS[b.dataset.a]()}
@@ -1329,10 +1622,12 @@ window.__bw={play:k=>{RUN++;GAMES[k].run(r=>result(r));},S:()=>S};
 SES={list:[{k:'speed'}],i:0};
 applyFont();
 home();
+if(S.link.pending)trySync();
 if(NATIVE){
-  if(S.alarm.asked)setupAlarms(false);
+  if(S.role==='grandma'&&S.alarm.asked)setupAlarms(false);
+  if(S.role==='family'&&S.fam.asked)setupFamAlarm(false);
   try{PL.App&&PL.App.addListener('backButton',()=>{if(ON_HOME){PL.App.minimizeApp&&PL.App.minimizeApp()}else home()})}catch(e){}
-  try{PL.App&&PL.App.addListener('resume',()=>{if(ON_HOME)home()})}catch(e){}
+  try{PL.App&&PL.App.addListener('resume',()=>{if(S.link.pending)trySync();if(ON_HOME)home()})}catch(e){}
 }
 })();
 </script>
